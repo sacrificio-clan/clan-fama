@@ -907,9 +907,9 @@
         counts.filter((category) => category.count >= category.required)
           .forEach((category) => addMedal(category.medal));
         if (baseComplete) {
-          if (selected.has("BOM")) addMedal("BOM");
-          if (selected.has("PRO")) addMedal("PRO", true);
           if (postMoonLord) addMedal("PÓS-MOON LORD", true);
+          else if (selected.has("PRO")) addMedal("PRO", true);
+          else if (selected.has("BOM")) addMedal("BOM");
         }
         if (determined) addMedal("DETERMINED", true);
         if (maxComplete && postMoonLord && determined) addMedal("SACRIFICIO", true);

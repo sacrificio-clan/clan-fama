@@ -769,3 +769,38 @@ button { color: inherit; }
   border: 1px solid #737d8c; border-radius: 4px; background: #1b1e24;
 }
 .member-profile-checklist-label { color: #d1d5db; font-size: 11px; line-height: 1.35; }
+
+
+/* Saved public member notes and achievement editor */
+.member-profile-notes-area {
+  display: block;
+  width: 100%;
+  min-height: 104px;
+  box-sizing: border-box;
+  padding: 10px 11px;
+  resize: vertical;
+  border: 1px solid #383e47;
+  border-radius: 7px;
+  background: #1b1e24;
+  color: #e5e7eb;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.member-profile-notes-area:read-only { opacity: .9; }
+.member-profile-notes-area:disabled { opacity: .65; }
+.member-profile-checklist-slot { cursor: default; }
+.member-profile-achievement-checkbox {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  margin: 0;
+  accent-color: #aeb7c4;
+  cursor: pointer;
+}
+.member-profile-achievement-checkbox:disabled { cursor: default; }
+.member-profile-actions { display: grid; justify-items: start; gap: 7px; margin-top: 12px; }
+.member-profile-save { min-height: 34px; padding: 7px 13px; font-size: 11px; }
+.member-profile-save-feedback { min-height: 15px; margin: 0; color: #a1a1aa; font-size: 11px; overflow-wrap: anywhere; }
+.member-profile-save-feedback.is-error { color: #fca5a5; }
+.member-profile-save-feedback.is-success { color: #86efac; }

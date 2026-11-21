@@ -95,7 +95,7 @@
     "Área reservada": "Reserved area",
     "Novas funcionalidades poderão ser adicionadas aqui futuramente.": "New features can be added here in the future.",
     "Nenhum Discord informado": "No Discord username provided",
-    "Nick não informado": "No in-game name provided"
+    "Nick não informado": "No in-game name provided",
     "As casas e suas posições podem ser consultadas publicamente.": "Houses and their positions can be viewed publicly.",
     "CASA SELECIONADA": "SELECTED HOUSE",
     "Fechar lista": "Close list",

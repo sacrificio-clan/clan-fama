@@ -27,6 +27,7 @@
   let members = [];
   let currentSession = null;
   let currentProfile = null;
+  let memberProfileLoadToken = 0;
 
   const overviewHouses = document.getElementById("overview-houses");
   const membersHouseGrid = document.getElementById("members-house-grid");
@@ -719,9 +720,17 @@
     return row;
   }
 
-  function showMemberProfile(member, roleLabel, photoCode, slotNumber) {
+  async function showMemberProfile(member, roleLabel, photoCode, slotNumber) {
     if (!memberProfilePanel || !member) return;
+    const loadToken = ++memberProfileLoadToken;
     memberProfilePanel.replaceChildren();
+
+    const canEdit = Boolean(currentSession && currentProfile && currentProfile.is_active &&
+      (currentProfile.role === "owner" ||
+        (currentProfile.role === "manager" && houses.some((house) =>
+          house.id === member.house_id && house.manager_profile_id === currentSession.user.id
+        ))));
+
     const heading = document.createElement("div");
     heading.className = "member-profile-heading";
     const eyebrow = document.createElement("p");
@@ -775,9 +784,11 @@
     notesSection.className = "member-profile-future member-profile-notes";
     const notesTitle = document.createElement("h5");
     notesTitle.textContent = "Notas";
-    const notesArea = document.createElement("div");
+    const notesArea = document.createElement("textarea");
     notesArea.className = "member-profile-notes-area";
-    notesArea.setAttribute("aria-label", "Espaço reservado para notas");
+    notesArea.setAttribute("aria-label", "Notas públicas do integrante");
+    notesArea.placeholder = canEdit ? "Escreva uma nota sobre este integrante..." : "Nenhuma nota cadastrada.";
+    notesArea.readOnly = !canEdit;
     notesSection.append(notesTitle, notesArea);
 
     const checklistSection = document.createElement("section");
@@ -796,23 +807,27 @@
         { title: "DPS", items: ["Star", "Soul"] }
       ]},
       { title: "Espadas", items: ["SubZero", "Tidesaber", "Darkenfrost", "True Guardian"] },
-      { title: "Espadas", items: ["SubZero", "Tidesaber", "Darkenfrost", "True Guardian"] },
       { title: "Dispositivo", items: ["PC", "Celular", "Console"] },
       { title: "Habilidade", items: ["NOOB", "NOVATO", "INTERMEDIÁRIO", "BOM", "PRO", "PÓS-MOON LORD"] },
       { title: "Título", items: ["DETERMINED"] }
     ];
+    const achievementInputs = new Map();
 
     function addAchievementRow(label) {
-      const row = document.createElement("div");
+      const row = document.createElement("label");
       row.className = "member-profile-checklist-slot";
-      const checkbox = document.createElement("span");
-      checkbox.className = "member-profile-check-placeholder";
-      checkbox.setAttribute("aria-hidden", "true");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "member-profile-achievement-checkbox";
+      checkbox.value = label;
+      checkbox.checked = false;
+      checkbox.disabled = !canEdit;
       const text = document.createElement("span");
       text.className = "member-profile-checklist-label";
       text.textContent = label;
       row.append(checkbox, text);
       checklistSlots.appendChild(row);
+      achievementInputs.set(label, checkbox);
     }
 
     achievementGroups.forEach((group) => {
@@ -834,9 +849,72 @@
       }
     });
 
+    const actions = document.createElement("div");
+    actions.className = "member-profile-actions";
+    const saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = "primary-button member-profile-save";
+    saveButton.textContent = "Salvar alterações";
+    saveButton.hidden = !canEdit;
+    const feedback = document.createElement("p");
+    feedback.className = "member-profile-save-feedback";
+    feedback.setAttribute("role", "status");
+    feedback.setAttribute("aria-live", "polite");
+    if (canEdit) actions.append(saveButton);
+    actions.append(feedback);
+
+    saveButton.addEventListener("click", async () => {
+      if (!canEdit || !supabaseClient) return;
+      saveButton.disabled = true;
+      feedback.textContent = "Salvando...";
+      feedback.className = "member-profile-save-feedback";
+      const selectedAchievements = Array.from(achievementInputs.entries())
+        .filter(([, input]) => input.checked)
+        .map(([label]) => label);
+      const { data, error } = await supabaseClient.rpc("save_member_profile_details", {
+        p_member_id: member.id,
+        p_notes: notesArea.value,
+        p_achievements: selectedAchievements
+      });
+      saveButton.disabled = false;
+      if (error || !data || data.success !== true) {
+        console.error("Erro ao salvar ficha do membro:", error || data);
+        feedback.textContent = "Não foi possível salvar. " + (error ? error.message : "Verifique as permissões.");
+        feedback.className = "member-profile-save-feedback is-error";
+        return;
+      }
+      feedback.textContent = "Alterações salvas.";
+      feedback.className = "member-profile-save-feedback is-success";
+    });
+
     checklistSection.append(checklistTitle, checklistSlots);
-    workspace.append(notesSection, checklistSection);
+    workspace.append(notesSection, checklistSection, actions);
     memberProfilePanel.append(heading, hero, details, workspace);
+
+    notesArea.value = "Carregando notas...";
+    notesArea.disabled = true;
+    const { data: profileDetails, error } = await supabaseClient
+      .from("member_profile_details")
+      .select("notes,achievements")
+      .eq("member_id", member.id)
+      .maybeSingle();
+
+    if (loadToken !== memberProfileLoadToken) return;
+    notesArea.disabled = false;
+    if (error) {
+      console.error("Não foi possível carregar notas e conquistas:", error);
+      notesArea.value = "Não foi possível carregar as notas.";
+      notesArea.placeholder = "Erro ao carregar.";
+      feedback.textContent = "Não foi possível carregar as conquistas: " + error.message;
+      feedback.className = "member-profile-save-feedback is-error";
+      saveButton.disabled = true;
+      return;
+    }
+    notesArea.value = profileDetails && profileDetails.notes ? profileDetails.notes : "";
+    const savedAchievements = new Set(
+      profileDetails && Array.isArray(profileDetails.achievements) ? profileDetails.achievements : []
+    );
+    achievementInputs.forEach((input, label) => { input.checked = savedAchievements.has(label); });
   }
 
   function resetMemberProfile() {
@@ -944,7 +1022,7 @@
     }
 
     const [houseResult, memberResult] = await Promise.all([
-      supabaseClient.from("houses").select("id,code,name"),
+      supabaseClient.from("houses").select("id,code,name,manager_profile_id"),
       supabaseClient.from("members").select("id,slot_number,slot_type,slot_label,house_id,nickname,discord_tag,fame,is_occupied").order("slot_number")
     ]);
 

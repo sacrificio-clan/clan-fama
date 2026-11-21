@@ -557,7 +557,7 @@
     });
   }
 
-  function createMembersHouseCard(code, title, eyebrow, detail, occupancy, fameText) {
+  function createMembersHouseCard(code, title, eyebrow, detail, occupancy, fameText, progress) {
     const card = document.createElement("button");
     card.type = "button";
     card.className = "members-house-card";
@@ -589,7 +589,25 @@
     arrow.setAttribute("aria-hidden", "true");
     arrow.textContent = "↗";
 
-    card.append(label, name, description, count, fame, arrow);
+    card.append(label, name, description, count);
+    if (progress) {
+      const track = document.createElement("span");
+      track.className = "members-house-progress";
+      track.setAttribute("aria-label", progress.occupied + " de " + progress.total + " membros");
+      const fill = document.createElement("span");
+      fill.className = "members-house-progress-fill";
+      fill.style.width = (progress.occupied / progress.total * 100) + "%";
+      track.appendChild(fill);
+      card.appendChild(track);
+      if (progress.full) {
+        card.classList.add("is-full");
+        const badge = document.createElement("span");
+        badge.className = "members-house-full-badge";
+        badge.textContent = "FULL";
+        card.appendChild(badge);
+      }
+    }
+    card.append(fame, arrow);
     card.addEventListener("click", () => showMembersGroup(code));
     return card;
   }
@@ -612,8 +630,9 @@
         house.name || houseNames[code],
         "CASA DO CLÃ",
         "10 vagas + 1 gerente",
-        occupied + "/10 vagas ocupadas",
-        "Fama da casa: " + formatFame(houseFame)
+        occupied + "/10 membros",
+        "Fama da casa: " + formatFame(houseFame),
+        { occupied, total: 10, full: occupied === 10 }
       );
       card.style.setProperty("--house-outline", ["#041365", "#01080b", "#f1ff00", "#ff0000"][index]);
       membersHouseGrid.appendChild(card);
@@ -1097,15 +1116,19 @@
         const member = members.find(
           (item) => Number(item.slot_number) === slot && item.slot_type === "member"
         );
-        membersSlotList.appendChild(createMemberSlotRow(slot, member, "Membro", code));
+        // Empty member positions stay available in the database but are hidden from the public roster.
+        if (member && member.is_occupied) {
+          membersSlotList.appendChild(createMemberSlotRow(slot, member, "Membro", code));
+        }
       }
 
       const manager = members.find(
-        (item) => item.slot_type === "manager" &&
+        (item) => item.slot_type === "manager" && item.is_occupied &&
           ((house && item.house_id === house.id) || Number(item.slot_number) === managerSlot)
       );
-      const actualManagerSlot = manager ? Number(manager.slot_number) : managerSlot;
-      membersSlotList.appendChild(createMemberSlotRow(actualManagerSlot, manager, "Gerente", code));
+      if (manager) {
+        membersSlotList.appendChild(createMemberSlotRow(Number(manager.slot_number), manager, "Gerente", code));
+      }
     }
 
     membersDetailPanel.hidden = false;

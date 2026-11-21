@@ -1084,3 +1084,20 @@ button { color: inherit; }
   font-weight: 900;
   letter-spacing: 1px;
 }
+
+
+/* Keep the long member administration list collapsed by default */
+.admin-members-details > summary {
+  min-height: 64px;
+}
+.admin-members-details > summary strong {
+  color: var(--text);
+  font-size: 15px;
+}
+.admin-members-details .admin-section-description {
+  margin: 0;
+  padding: 14px 15px 10px;
+}
+.admin-members-details .admin-members-list {
+  padding: 0 15px 15px;
+}

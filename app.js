@@ -1603,12 +1603,14 @@
       </section>
 
       <section class="admin-section">
-        <div class="admin-section-heading">
-          <div><p class="eyebrow">CONTAS CADASTRADAS</p><h3>Integrantes do clã</h3></div>
-          <span class="number-chip" id="admin-member-total">—</span>
-        </div>
-        <p class="muted admin-section-description">Você pode corrigir a FAMA individual ou remover qualquer integrante, inclusive gerentes. A FAMA global não será reduzida quando alguém sair.</p>
-        <div id="admin-members-list" class="admin-members-list"></div>
+        <details class="create-account-details admin-members-details" data-no-translate>
+          <summary>
+            <span><p class="eyebrow">CONTAS CADASTRADAS</p><strong>Integrantes do clã</strong></span>
+            <span class="number-chip" id="admin-member-total">—</span>
+          </summary>
+          <p class="muted admin-section-description">Você pode corrigir a FAMA individual ou remover qualquer integrante, inclusive gerentes. A FAMA global não será reduzida quando alguém sair.</p>
+          <div id="admin-members-list" class="admin-members-list"></div>
+        </details>
       </section>
 
       <section class="admin-section">

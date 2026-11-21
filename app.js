@@ -102,6 +102,7 @@
     "Espadas": "Swords",
     "Dispositivo": "Device",
     "Habilidade": "Skill",
+    "Título": "Title",
     "Lvl 150": "Level 150",
     "Lvl 20+ HP": "Level 20+ HP",
     "Lvl 20+ DMG": "Level 20+ DMG",
@@ -795,8 +796,10 @@
         { title: "DPS", items: ["Star", "Soul"] }
       ]},
       { title: "Espadas", items: ["SubZero", "Tidesaber", "Darkenfrost", "True Guardian"] },
+      { title: "Espadas", items: ["SubZero", "Tidesaber", "Darkenfrost", "True Guardian"] },
       { title: "Dispositivo", items: ["PC", "Celular", "Console"] },
-      { title: "Habilidade", items: ["NOOB", "NOVATO", "INTERMEDIÁRIO", "BOM", "PRO", "PÓS-MOON LORD"] }
+      { title: "Habilidade", items: ["NOOB", "NOVATO", "INTERMEDIÁRIO", "BOM", "PRO", "PÓS-MOON LORD"] },
+      { title: "Título", items: ["DETERMINED"] }
     ];
 
     function addAchievementRow(label) {

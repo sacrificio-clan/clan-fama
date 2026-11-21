@@ -34,6 +34,7 @@
   const membersDetailTitle = document.getElementById("members-detail-title");
   const membersDetailCaption = document.getElementById("members-detail-caption");
   const membersSlotList = document.getElementById("members-slot-list");
+  const memberProfilePanel = document.getElementById("member-profile-panel");
   const membersBackButton = document.getElementById("members-back-button");
   const loginDialog = document.getElementById("login-dialog");
   const loginForm = document.getElementById("login-form");
@@ -666,13 +667,97 @@
     status.textContent = occupied ? "Ocupado" : "Disponível";
 
     row.append(photo, identity, fame, status);
+    if (occupied) {
+      row.classList.add("is-selectable");
+      row.tabIndex = 0;
+      row.setAttribute("role", "button");
+      row.setAttribute("aria-label", "Ver ficha de " + (member.nickname || "integrante"));
+      const selectMember = () => {
+        membersSlotList.querySelectorAll(".members-slot-row.is-selected").forEach((item) => {
+          item.classList.remove("is-selected");
+          item.setAttribute("aria-pressed", "false");
+        });
+        row.classList.add("is-selected");
+        row.setAttribute("aria-pressed", "true");
+        showMemberProfile(member, roleLabel, photoCode, slotNumber);
+      };
+      row.addEventListener("click", selectMember);
+      row.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectMember(); }
+      });
+    }
     return row;
+  }
+
+  function showMemberProfile(member, roleLabel, photoCode, slotNumber) {
+    if (!memberProfilePanel || !member) return;
+    memberProfilePanel.replaceChildren();
+    const heading = document.createElement("div");
+    heading.className = "member-profile-heading";
+    const eyebrow = document.createElement("p");
+    eyebrow.className = "eyebrow";
+    eyebrow.textContent = "PERFIL DO CLÃ";
+    const title = document.createElement("h4");
+    title.textContent = "Ficha do integrante";
+    heading.append(eyebrow, title);
+
+    const hero = document.createElement("div");
+    hero.className = "member-profile-hero";
+    const photoWrap = document.createElement("div");
+    photoWrap.className = "member-profile-photo-wrap";
+    const photo = document.createElement("img");
+    photo.className = "member-profile-photo";
+    photo.alt = "Foto de " + (member.nickname || "integrante");
+    photo.src = "./fotos/" + photoCode + "_" + slotNumber + ".png";
+    photo.addEventListener("error", () => { photo.hidden = true; photoWrap.classList.add("has-no-photo"); photoWrap.textContent = "FOTO"; }, { once: true });
+    photoWrap.appendChild(photo);
+    const identity = document.createElement("div");
+    identity.className = "member-profile-identity";
+    const nickname = document.createElement("strong");
+    nickname.textContent = member.nickname || "Nick não informado";
+    const slot = document.createElement("span");
+    slot.textContent = "Slot " + padSlot(slotNumber) + " · " + roleLabel;
+    identity.append(nickname, slot);
+    hero.append(photoWrap, identity);
+
+    const details = document.createElement("div");
+    details.className = "member-profile-fields";
+    const gameField = document.createElement("div");
+    gameField.className = "member-profile-field";
+    const gameLabel = document.createElement("span");
+    gameLabel.textContent = "Nick do jogo";
+    const gameValue = document.createElement("strong");
+    gameValue.textContent = member.nickname || "Não informado";
+    gameField.append(gameLabel, gameValue);
+    const discordField = document.createElement("div");
+    discordField.className = "member-profile-field";
+    const discordLabel = document.createElement("span");
+    discordLabel.textContent = "Usuário do Discord";
+    const discordValue = document.createElement("strong");
+    discordValue.textContent = member.discord_tag || "Nenhum Discord informado";
+    discordField.append(discordLabel, discordValue);
+    details.append(gameField, discordField);
+
+    const future = document.createElement("section");
+    future.className = "member-profile-future";
+    const futureTitle = document.createElement("h5");
+    futureTitle.textContent = "Área reservada";
+    const futureText = document.createElement("p");
+    futureText.textContent = "Novas funcionalidades poderão ser adicionadas aqui futuramente.";
+    future.append(futureTitle, futureText);
+    memberProfilePanel.append(heading, hero, details, future);
+  }
+
+  function resetMemberProfile() {
+    if (!memberProfilePanel) return;
+    memberProfilePanel.innerHTML = '<div class="member-profile-empty"><span class="member-profile-empty-icon">◎</span><strong>Ficha do integrante</strong><p>Selecione um membro na lista para visualizar suas informações.</p></div>';
   }
 
   function showMembersGroup(code) {
     if (!membersDetailPanel || !membersSlotList) return;
 
     membersSlotList.replaceChildren();
+    resetMemberProfile();
     membersDetailPanel.dataset.group = code;
 
     membersHouseGrid.querySelectorAll(".members-house-card").forEach((card) => {
@@ -992,7 +1077,8 @@
       return;
     }
 
-    if (!data || data.length === 0) {
+    const visibleRequests = (data || []).filter((request) => request.status !== "rejected");
+    if (visibleRequests.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
       empty.textContent = "Nenhuma solicitação encontrada.";
@@ -1016,7 +1102,7 @@
 
     const list = document.createElement("div");
     list.className = "request-list";
-    data.forEach((request) => {
+    visibleRequests.forEach((request) => {
       const member = members.find((item) => item.id === request.member_id);
       const card = document.createElement("article");
       card.className = "request-card";

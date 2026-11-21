@@ -65,6 +65,7 @@
     "Painel de organização, casas e integrantes do clã.": "Clan management panel for houses and members.",
     "ESTRUTURA DO CLÃ": "CLAN STRUCTURE",
     "Slots totais": "Total slots",
+    "Slots ocupados": "Occupied slots",
     "Estrutura completa": "Full structure",
     "Casas": "Houses",
     "Quatro cavaleiros": "Four horsemen",
@@ -315,6 +316,12 @@
     }
     if (translated.endsWith(" ocupadas")) translated = translated.slice(0, -" ocupadas".length) + " occupied";
     if (translated.startsWith("Slots ")) translated = translated;
+
+    const availableSuffix = " disponíveis";
+    const availableIndex = translated.indexOf(availableSuffix);
+    if (availableIndex > 0 && Number.isFinite(Number(translated.slice(0, availableIndex)))) {
+      translated = translated.slice(0, availableIndex) + " available";
+    }
 
     const ratioSuffix = "/10 vagas ocupadas";
     const ratioIndex = translated.indexOf(ratioSuffix);
@@ -728,15 +735,28 @@
   }
 
   function updateOverviewStats() {
+    const totalSlots = 50;
+    // Count occupied positions across the full structure, including managers and the owner.
+    const occupiedSlots = members.filter((member) =>
+      member && (Boolean(member.is_occupied) || Number(member.slot_number) === 50)
+    ).length;
+    const availableSlots = Math.max(0, totalSlots - occupiedSlots);
+
+    const occupancyValue = document.getElementById("overview-occupancy-value");
+    const availableValue = document.getElementById("overview-available-value");
+    const occupancyFill = document.getElementById("overview-occupancy-fill");
+    if (occupancyValue) occupancyValue.textContent = occupiedSlots + "/" + totalSlots;
+    if (availableValue) availableValue.textContent = availableSlots + " disponíveis";
+    if (occupancyFill) occupancyFill.style.width = Math.min(100, (occupiedSlots / totalSlots) * 100) + "%";
+
     const stats = document.querySelectorAll(".stat-card strong");
     if (stats.length >= 4) {
-      stats[0].textContent = String(members.length).padStart(2, "0");
       stats[1].textContent = String(houses.length).padStart(2, "0");
       stats[2].textContent = String(members.filter((m) => m.slot_type === "special").length).padStart(2, "0");
       stats[3].textContent = String(members.filter((m) => m.slot_type === "manager").length).padStart(2, "0");
     }
 
-    const owner = members.find((member) => member.slot_number === 50);
+    const owner = members.find((member) => Number(member.slot_number) === 50);
     const ownerName = document.querySelector(".owner-name");
     if (ownerName && owner && owner.nickname) ownerName.textContent = owner.nickname;
   }

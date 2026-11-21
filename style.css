@@ -917,3 +917,24 @@ button { color: inherit; }
 @media (max-width: 420px) {
   .member-profile-progress-breakdown { grid-template-columns: 1fr; }
 }
+
+
+/* Distinctive colors for the three special title medals */
+.member-profile-medal.is-determined {
+  border-color: #39ff14;
+  background: linear-gradient(135deg, #12320d, #071b08);
+  color: #7dff62;
+  box-shadow: 0 0 10px #39ff1433, inset 0 0 8px #39ff1418;
+}
+.member-profile-medal.is-sacrificio {
+  border-color: #ff2020;
+  background: linear-gradient(135deg, #650909, #250505);
+  color: #ff4545;
+  box-shadow: 0 0 13px #ff202044, inset 0 0 8px #ff202022;
+}
+.member-profile-medal.is-apex {
+  border-color: #8b70ff;
+  background: linear-gradient(135deg, #25206b, #101b48);
+  color: #a9a5ff;
+  box-shadow: 0 0 15px #7565ff55, inset 0 0 9px #536dff33;
+}

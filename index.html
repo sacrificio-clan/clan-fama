@@ -9,6 +9,7 @@
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="stylesheet" href="./style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./proprietario/perfil.js"></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -96,9 +97,19 @@
             <p class="muted">Cinco posições reservadas para membros especiais ou rotativos, sob sua administração.</p>
           </article>
           <article class="info-card owner-card">
-            <div class="card-heading"><div><p class="eyebrow">SLOT 50</p><h3>Proprietário</h3></div><span class="number-chip">50</span></div>
-            <p class="owner-name">Lux_Nihil</p>
-            <p class="muted">Conta principal do clã.</p>
+            <div class="card-heading"><div><p class="eyebrow">PERFIL ESPECIAL</p><h3>Proprietário</h3></div><span class="number-chip">★</span></div>
+            <div class="owner-profile">
+              <div class="owner-profile-photo-wrap">
+                <img id="owner-profile-photo" class="owner-profile-photo" src="./proprietario/foto.png" alt="Foto de Lux_Nihil" onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+                <span class="owner-profile-photo-placeholder" hidden>FOTO</span>
+              </div>
+              <div class="owner-profile-info">
+                <strong class="owner-name" id="owner-profile-name">Lux_Nihil</strong>
+                <span class="owner-profile-fame-label">FAMA</span>
+                <strong class="owner-profile-fame" id="owner-profile-fame">348.872.708</strong>
+              </div>
+            </div>
+            <p class="muted">Perfil independente dos slots e do banco de dados.</p>
           </article>
         </div>
         <p class="footnote">A estrutura do clã e as informações dos membros são carregadas do Supabase.</p>

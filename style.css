@@ -282,7 +282,7 @@ button { color: inherit; }
   gap: 8px;
   border: 2px solid var(--house-outline);
   border-radius: 13px;
-  background: #ffffff;
+  background: #e7e9ed;
   color: #111827;
   text-align: left;
   cursor: pointer;
@@ -331,7 +331,7 @@ button { color: inherit; }
   padding: 21px;
   border: 2px solid #9ca3af;
   border-radius: 13px;
-  background: #ffffff;
+  background: #e7e9ed;
   color: #111827;
 }
 .members-detail-panel[hidden] {

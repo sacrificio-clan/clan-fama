@@ -883,7 +883,6 @@
         count: category.items.filter((item) => selected.has(item)).length
       }));
       const baseComplete = counts.every((category) => category.count >= category.required);
-      const maxComplete = counts.every((category) => category.count === category.items.length);
       const determined = titleItems.every((item) => selected.has(item));
       const postMoonLord = selected.has("PÓS-MOON LORD");
       const allChecked = achievementGroups.every((group) => {
@@ -896,13 +895,25 @@
       medalsList.replaceChildren();
       const addMedal = (name, special = false) => {
         const medal = document.createElement("span");
-        medal.className = "member-profile-medal" + (special ? " is-special" : "");
+        const medalClass = {
+          "DETERMINED": "is-determined",
+          "SACRIFICIO": "is-sacrificio",
+          "APEX": "is-apex"
+        }[name];
+        medal.className = "member-profile-medal" + (special ? " is-special" : "") +
+          (medalClass ? " " + medalClass : "");
         medal.textContent = name;
         medalsList.appendChild(medal);
       };
 
+      // APEX is the secret maximum: every single checkbox must be selected.
+      // SACRIFICIO requires every regular category medal, POST-MOON LORD,
+      // and DETERMINED; Relics and Gears use their medal thresholds, not 100%.
+      const sacrificioUnlocked = baseComplete && postMoonLord && determined;
       if (allChecked) {
         addMedal("APEX", true);
+      } else if (sacrificioUnlocked) {
+        addMedal("SACRIFICIO", true);
       } else {
         counts.filter((category) => category.count >= category.required)
           .forEach((category) => addMedal(category.medal));
@@ -912,7 +923,6 @@
           else if (selected.has("BOM")) addMedal("BOM");
         }
         if (determined) addMedal("DETERMINED", true);
-        if (maxComplete && postMoonLord && determined) addMedal("SACRIFICIO", true);
       }
 
       const progressRows = [

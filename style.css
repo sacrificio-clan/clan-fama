@@ -975,3 +975,59 @@ button { color: inherit; }
   color: #a9a5ff;
   box-shadow: 0 0 15px #7565ff55, inset 0 0 9px #536dff33;
 }
+
+
+/* Independent owner profile card */
+.owner-card { min-width: 0; }
+.owner-profile {
+  margin-top: 13px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.owner-profile-photo-wrap {
+  width: 82px;
+  height: 82px;
+  flex: 0 0 82px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #59616e;
+  border-radius: 10px;
+  background: #20242b;
+}
+.owner-profile-photo {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.owner-profile-photo-placeholder {
+  color: #a1a1aa;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .8px;
+}
+.owner-profile-info {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+.owner-profile-info .owner-name {
+  overflow-wrap: anywhere;
+  font-size: 16px !important;
+}
+.owner-profile-fame-label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.owner-profile-fame {
+  color: var(--text);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 650px) {
+  .owner-profile-photo-wrap { width: 70px; height: 70px; flex-basis: 70px; }
+}

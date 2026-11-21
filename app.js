@@ -745,14 +745,38 @@
     discordField.append(discordLabel, discordValue);
     details.append(gameField, discordField);
 
-    const future = document.createElement("section");
-    future.className = "member-profile-future";
-    const futureTitle = document.createElement("h5");
-    futureTitle.textContent = "Área reservada";
-    const futureText = document.createElement("p");
-    futureText.textContent = "Novas funcionalidades poderão ser adicionadas aqui futuramente.";
-    future.append(futureTitle, futureText);
-    memberProfilePanel.append(heading, hero, details, future);
+    const workspace = document.createElement("div");
+    workspace.className = "member-profile-workspace";
+
+    const notesSection = document.createElement("section");
+    notesSection.className = "member-profile-future member-profile-notes";
+    const notesTitle = document.createElement("h5");
+    notesTitle.textContent = "Notas";
+    const notesArea = document.createElement("div");
+    notesArea.className = "member-profile-notes-area";
+    notesArea.setAttribute("aria-label", "Espaço reservado para notas");
+    notesSection.append(notesTitle, notesArea);
+
+    const checklistSection = document.createElement("section");
+    checklistSection.className = "member-profile-future member-profile-checklist";
+    const checklistTitle = document.createElement("h5");
+    checklistTitle.textContent = "Lista de objetivos";
+    const checklistSlots = document.createElement("div");
+    checklistSlots.className = "member-profile-checklist-slots";
+    for (let index = 0; index < 8; index += 1) {
+      const row = document.createElement("div");
+      row.className = "member-profile-checklist-slot";
+      const checkbox = document.createElement("span");
+      checkbox.className = "member-profile-check-placeholder";
+      checkbox.setAttribute("aria-hidden", "true");
+      const blank = document.createElement("span");
+      blank.className = "member-profile-checklist-blank";
+      row.append(checkbox, blank);
+      checklistSlots.appendChild(row);
+    }
+    checklistSection.append(checklistTitle, checklistSlots);
+    workspace.append(notesSection, checklistSection);
+    memberProfilePanel.append(heading, hero, details, workspace);
   }
 
   function resetMemberProfile() {

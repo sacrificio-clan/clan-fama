@@ -1142,9 +1142,20 @@
       stats[3].textContent = String(members.filter((m) => m.slot_type === "manager").length).padStart(2, "0");
     }
 
-    const owner = members.find((member) => Number(member.slot_number) === 50);
-    const ownerName = document.querySelector(".owner-name");
-    if (ownerName && owner && owner.nickname) ownerName.textContent = owner.nickname;
+    // The owner profile is intentionally independent from Supabase and the 50 clan slots.
+    const ownerProfile = window.SACRIFICIO_OWNER_PROFILE || {};
+    const ownerName = document.getElementById("owner-profile-name");
+    const ownerFame = document.getElementById("owner-profile-fame");
+    const ownerPhoto = document.getElementById("owner-profile-photo");
+    if (ownerName) ownerName.textContent = ownerProfile.nickname || "Lux_Nihil";
+    if (ownerFame) {
+      const fame = Number(ownerProfile.fame);
+      ownerFame.textContent = Number.isFinite(fame) ? fame.toLocaleString(currentLanguage === "en" ? "en-US" : "pt-BR") : "0";
+    }
+    if (ownerPhoto && ownerProfile.photo) {
+      ownerPhoto.src = ownerProfile.photo;
+      ownerPhoto.alt = "Foto de " + (ownerProfile.nickname || "Lux_Nihil");
+    }
   }
 
   async function loadPublicData() {

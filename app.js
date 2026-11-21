@@ -92,6 +92,28 @@
     "Ficha do integrante": "Member profile",
     "Selecione um membro na lista para visualizar suas informações.": "Select a member from the list to view their information.",
     "Nick do jogo": "In-game name",
+    "Conquistas": "Achievements",
+    "Pet": "Pet",
+    "Relics": "Relics",
+    "Gears": "Gears",
+    "Runas": "Runes",
+    "Suporte": "Support",
+    "DPS": "DPS",
+    "Espadas": "Swords",
+    "Dispositivo": "Device",
+    "Habilidade": "Skill",
+    "Lvl 150": "Level 150",
+    "Lvl 20+ HP": "Level 20+ HP",
+    "Lvl 20+ DMG": "Level 20+ DMG",
+    "Lvl 50+ HP": "Level 50+ HP",
+    "Lvl 50+ DMG": "Level 50+ DMG",
+    "DPS FULL": "FULL DPS",
+    "HP FULL": "FULL HP",
+    "Celular": "Mobile",
+    "NOVATO": "BEGINNER",
+    "INTERMEDIÁRIO": "INTERMEDIATE",
+    "BOM": "GOOD",
+    "PÓS-MOON LORD": "POST-MOON LORD",
     "Área reservada": "Reserved area",
     "Novas funcionalidades poderão ser adicionadas aqui futuramente.": "New features can be added here in the future.",
     "Nenhum Discord informado": "No Discord username provided",
@@ -760,20 +782,55 @@
     const checklistSection = document.createElement("section");
     checklistSection.className = "member-profile-future member-profile-checklist";
     const checklistTitle = document.createElement("h5");
-    checklistTitle.textContent = "Lista de objetivos";
+    checklistTitle.textContent = "Conquistas";
     const checklistSlots = document.createElement("div");
     checklistSlots.className = "member-profile-checklist-slots";
-    for (let index = 0; index < 8; index += 1) {
+
+    const achievementGroups = [
+      { title: "Pet", items: ["Lvl 150", "Universal", "Dual Edge", "T6"] },
+      { title: "Relics", items: ["Lvl 20+ HP", "Lvl 20+ DMG", "Lvl 50+ HP", "Lvl 50+ DMG"] },
+      { title: "Gears", items: ["DPS FULL", "HP FULL", "Rune King", "Void", "ENDGAME"] },
+      { title: "Runas", subgroups: [
+        { title: "Suporte", items: ["Egg/Protector", "Party", "Silencer", "Poseidon"] },
+        { title: "DPS", items: ["Star", "Soul"] }
+      ]},
+      { title: "Espadas", items: ["SubZero", "Tidesaber", "Darkenfrost", "True Guardian"] },
+      { title: "Dispositivo", items: ["PC", "Celular", "Console"] },
+      { title: "Habilidade", items: ["NOOB", "NOVATO", "INTERMEDIÁRIO", "BOM", "PRO", "PÓS-MOON LORD"] }
+    ];
+
+    function addAchievementRow(label) {
       const row = document.createElement("div");
       row.className = "member-profile-checklist-slot";
       const checkbox = document.createElement("span");
       checkbox.className = "member-profile-check-placeholder";
       checkbox.setAttribute("aria-hidden", "true");
-      const blank = document.createElement("span");
-      blank.className = "member-profile-checklist-blank";
-      row.append(checkbox, blank);
+      const text = document.createElement("span");
+      text.className = "member-profile-checklist-label";
+      text.textContent = label;
+      row.append(checkbox, text);
       checklistSlots.appendChild(row);
     }
+
+    achievementGroups.forEach((group) => {
+      const groupHeading = document.createElement("h6");
+      groupHeading.className = "member-profile-achievement-group";
+      groupHeading.textContent = group.title;
+      checklistSlots.appendChild(groupHeading);
+
+      if (group.subgroups) {
+        group.subgroups.forEach((subgroup) => {
+          const subgroupHeading = document.createElement("p");
+          subgroupHeading.className = "member-profile-achievement-subgroup";
+          subgroupHeading.textContent = subgroup.title;
+          checklistSlots.appendChild(subgroupHeading);
+          subgroup.items.forEach(addAchievementRow);
+        });
+      } else {
+        group.items.forEach(addAchievementRow);
+      }
+    });
+
     checklistSection.append(checklistTitle, checklistSlots);
     workspace.append(notesSection, checklistSection);
     memberProfilePanel.append(heading, hero, details, workspace);

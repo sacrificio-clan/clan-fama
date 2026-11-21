@@ -759,6 +759,31 @@
     identity.append(nickname, slot);
     hero.append(photoWrap, identity);
 
+    const medalsSection = document.createElement("section");
+    medalsSection.className = "member-profile-rewards";
+    const medalsTitle = document.createElement("h5");
+    medalsTitle.textContent = "Medalhas";
+    const medalsList = document.createElement("div");
+    medalsList.className = "member-profile-medals";
+    medalsSection.append(medalsTitle, medalsList);
+
+    const progressSection = document.createElement("section");
+    progressSection.className = "member-profile-progress";
+    const progressHeading = document.createElement("div");
+    progressHeading.className = "member-profile-progress-heading";
+    const progressTitle = document.createElement("h5");
+    progressTitle.textContent = "Progresso das conquistas";
+    const progressValue = document.createElement("strong");
+    progressValue.className = "member-profile-progress-value";
+    progressHeading.append(progressTitle, progressValue);
+    const progressTrack = document.createElement("div");
+    progressTrack.className = "member-profile-progress-track";
+    const progressFill = document.createElement("span");
+    progressTrack.appendChild(progressFill);
+    const progressBreakdown = document.createElement("div");
+    progressBreakdown.className = "member-profile-progress-breakdown";
+    progressSection.append(progressHeading, progressTrack, progressBreakdown);
+
     const details = document.createElement("div");
     details.className = "member-profile-fields";
     const gameField = document.createElement("div");
@@ -828,6 +853,101 @@
       row.append(checkbox, text);
       checklistSlots.appendChild(row);
       achievementInputs.set(label, checkbox);
+      checkbox.addEventListener("change", updateAchievementRewards);
+    }
+
+    function updateAchievementRewards() {
+      const selected = new Set(
+        Array.from(achievementInputs.entries()).filter(([, input]) => input.checked).map(([label]) => label)
+      );
+      const groupItems = (title) => {
+        const group = achievementGroups.find((item) => item.title === title);
+        if (!group) return [];
+        return group.subgroups
+          ? group.subgroups.flatMap((subgroup) => subgroup.items)
+          : group.items.slice();
+      };
+      const categories = [
+        { title: "Pet", items: groupItems("Pet"), required: 4, medal: "PET" },
+        { title: "Relics", items: groupItems("Relics"), required: 2, medal: "RELICS" },
+        { title: "Gears", items: groupItems("Gears"), required: 3, medal: "GEARS" },
+        { title: "Runas", items: groupItems("Runas"), required: 6, medal: "RUNAS" },
+        { title: "Espadas", items: groupItems("Espadas"), required: 4, medal: "ESPADAS" },
+        { title: "Dispositivo", items: groupItems("Dispositivo"), required: 1, medal: "DISPOSITIVO" }
+      ];
+      const skillItems = groupItems("Habilidade");
+      const titleItems = groupItems("Título");
+      const skillCount = skillItems.filter((item) => selected.has(item)).length;
+      const counts = categories.map((category) => ({
+        ...category,
+        count: category.items.filter((item) => selected.has(item)).length
+      }));
+      const baseComplete = counts.every((category) => category.count >= category.required);
+      const maxComplete = counts.every((category) => category.count === category.items.length);
+      const determined = titleItems.every((item) => selected.has(item));
+      const postMoonLord = selected.has("PÓS-MOON LORD");
+      const allChecked = achievementGroups.every((group) => {
+        const items = group.subgroups
+          ? group.subgroups.flatMap((subgroup) => subgroup.items)
+          : group.items;
+        return items.every((item) => selected.has(item));
+      });
+
+      medalsList.replaceChildren();
+      const addMedal = (name, special = false) => {
+        const medal = document.createElement("span");
+        medal.className = "member-profile-medal" + (special ? " is-special" : "");
+        medal.textContent = name;
+        medalsList.appendChild(medal);
+      };
+
+      if (allChecked) {
+        addMedal("APEX", true);
+      } else {
+        counts.filter((category) => category.count >= category.required)
+          .forEach((category) => addMedal(category.medal));
+        if (baseComplete) {
+          if (selected.has("BOM")) addMedal("BOM");
+          if (selected.has("PRO")) addMedal("PRO", true);
+          if (postMoonLord) addMedal("PÓS-MOON LORD", true);
+        }
+        if (determined) addMedal("DETERMINED", true);
+        if (maxComplete && postMoonLord && determined) addMedal("SACRIFICIO", true);
+      }
+
+      const progressRows = [
+        ...counts.map((category) => ({
+          title: category.title,
+          count: category.count,
+          total: category.items.length,
+          complete: category.count >= category.required,
+          required: category.required
+        })),
+        {
+          title: "Habilidade",
+          count: skillCount ? 1 : 0,
+          total: 1,
+          complete: skillCount > 0,
+          required: 1
+        }
+      ];
+      const completed = progressRows.filter((item) => item.complete).length;
+      const percent = Math.round((completed / progressRows.length) * 100);
+      progressValue.textContent = completed + "/" + progressRows.length + " · " + percent + "%";
+      progressFill.style.width = percent + "%";
+      progressBreakdown.replaceChildren();
+      progressRows.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "member-profile-progress-row" + (item.complete ? " is-complete" : "");
+        const name = document.createElement("span");
+        name.textContent = item.title;
+        const value = document.createElement("strong");
+        value.textContent = item.count + "/" + item.total;
+        const requirement = document.createElement("small");
+        requirement.textContent = item.complete ? "Completo" : "Meta: " + item.required;
+        row.append(name, value, requirement);
+        progressBreakdown.appendChild(row);
+      });
     }
 
     achievementGroups.forEach((group) => {
@@ -889,7 +1009,8 @@
 
     checklistSection.append(checklistTitle, checklistSlots);
     workspace.append(notesSection, checklistSection, actions);
-    memberProfilePanel.append(heading, hero, details, workspace);
+    memberProfilePanel.append(heading, hero, medalsSection, progressSection, details, workspace);
+    updateAchievementRewards();
 
     notesArea.value = "Carregando notas...";
     notesArea.disabled = true;
@@ -915,6 +1036,7 @@
       profileDetails && Array.isArray(profileDetails.achievements) ? profileDetails.achievements : []
     );
     achievementInputs.forEach((input, label) => { input.checked = savedAchievements.has(label); });
+    updateAchievementRewards();
   }
 
   function resetMemberProfile() {

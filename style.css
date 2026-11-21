@@ -616,3 +616,89 @@ button { color: inherit; }
 .member-profile-empty strong { font-size: 13px; }
 .member-profile-empty-icon { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid #d1d5db; border-radius: 50%; color: #6b7280; font-size: 24px; }
 @media (max-width: 850px) { .members-detail-layout { grid-template-columns: minmax(0, 1fr); } .member-profile-panel { position: static; min-height: 250px; } .member-profile-empty { min-height: 210px; } }
+
+/* Dark charcoal surfaces for the member roster and profile */
+.members-slot-row {
+  border-color: #343840;
+  background: #1b1e24;
+  color: #e5e7eb;
+}
+.members-slot-row.is-manager {
+  border-color: #414650;
+  background: #20242b;
+}
+.members-slot-number,
+.members-slot-identity strong {
+  color: #f3f4f6;
+}
+.members-slot-identity span,
+.members-slot-fame-label {
+  color: #9ca3af;
+}
+.members-slot-fame {
+  border-left-color: #3a3f48;
+  border-right-color: #3a3f48;
+}
+.members-slot-fame-value {
+  color: #e5e7eb;
+}
+.members-slot-status {
+  border-color: #414650;
+}
+.members-slot-status.occupied {
+  border-color: #4b5563;
+  background: #303640;
+  color: #e5e7eb;
+}
+.members-slot-status.available {
+  border-color: #343840;
+  background: #242830;
+  color: #9ca3af;
+}
+.members-slot-photo-wrap {
+  border-color: #454b55;
+  background: #242830;
+}
+.members-slot-row.is-selectable:hover {
+  border-color: #737d8c;
+  background: #292e36;
+}
+.members-slot-row.is-selectable.is-selected {
+  border-color: #8b95a4;
+  background: #303640;
+  box-shadow: inset 3px 0 #aeb7c4;
+}
+.member-profile-panel {
+  border-color: #3a3f48;
+  background: #1b1e24;
+  color: #f3f4f6;
+}
+.member-profile-heading .eyebrow,
+.member-profile-identity span,
+.member-profile-field span,
+.member-profile-empty p,
+.member-profile-future p {
+  color: #a1a1aa;
+}
+.member-profile-photo-wrap {
+  border-color: #454b55;
+  background: #242830;
+  color: #9ca3af;
+}
+.member-profile-field {
+  border-color: #383e47;
+  background: #242830;
+  color: #e5e7eb;
+}
+.member-profile-future {
+  border-color: #454b55;
+  background: #20242b;
+}
+.member-profile-future h5 {
+  color: #d1d5db;
+}
+.member-profile-empty-icon {
+  border-color: #4b5563;
+  color: #a1a1aa;
+}
+

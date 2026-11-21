@@ -804,3 +804,116 @@ button { color: inherit; }
 .member-profile-save-feedback { min-height: 15px; margin: 0; color: #a1a1aa; font-size: 11px; overflow-wrap: anywhere; }
 .member-profile-save-feedback.is-error { color: #fca5a5; }
 .member-profile-save-feedback.is-success { color: #86efac; }
+
+
+/* Automatic achievement medals and progress */
+.member-profile-rewards,
+.member-profile-progress {
+  margin: 0 0 14px;
+  padding: 13px;
+  border: 1px solid #383e47;
+  border-radius: 9px;
+  background: #20242b;
+}
+.member-profile-rewards h5,
+.member-profile-progress h5 {
+  margin: 0;
+  color: #e5e7eb;
+  font-size: 11px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.member-profile-medals {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.member-profile-medal {
+  min-height: 27px;
+  padding: 6px 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #626b78;
+  border-radius: 6px;
+  background: #303640;
+  color: #e5e7eb;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .55px;
+}
+.member-profile-medal.is-special {
+  border-color: #b18b45;
+  background: linear-gradient(135deg, #3d3020, #29251f);
+  color: #f3d69a;
+}
+.member-profile-medal:only-child {
+  min-height: 34px;
+  padding: 8px 14px;
+  font-size: 12px;
+}
+.member-profile-progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.member-profile-progress-value {
+  color: #e5e7eb;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.member-profile-progress-track {
+  width: 100%;
+  height: 7px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #3a414c;
+}
+.member-profile-progress-track span {
+  width: 0;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7b8491, #d2d7df);
+  transition: width .2s ease;
+}
+.member-profile-progress-breakdown {
+  margin-top: 11px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.member-profile-progress-row {
+  min-width: 0;
+  padding: 7px 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 7px;
+  border: 1px solid #383e47;
+  border-radius: 6px;
+  background: #1b1e24;
+  color: #aeb7c4;
+  font-size: 10px;
+}
+.member-profile-progress-row strong {
+  color: #e5e7eb;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.member-profile-progress-row small {
+  grid-column: 1 / -1;
+  color: #858e9b;
+  font-size: 8px;
+}
+.member-profile-progress-row.is-complete {
+  border-color: #596b60;
+}
+.member-profile-progress-row.is-complete small {
+  color: #9bc6a7;
+}
+@media (max-width: 420px) {
+  .member-profile-progress-breakdown { grid-template-columns: 1fr; }
+}

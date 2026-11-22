@@ -410,6 +410,7 @@
     discoveries: DISCOVERIES,
     recipes: RECIPES,
     progression: PROGRESSION,
+    minerals: items.filter(item => item.category === "ore"),
     starterPlants: items.filter(item => item.category === "plant" && item.starter),
     getItem: id => itemById.get(Number(id)) || null,
     getTag: id => tagById.get(Number(id)) || null,

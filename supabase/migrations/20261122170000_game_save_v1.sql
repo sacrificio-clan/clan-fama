@@ -341,21 +341,31 @@ begin
      where player_id = v_player_id and counter_key = 'WORM_DISCOVERY'
      for update;
 
-    v_worm_chance := least(100, 1 + v_failures);
-    v_worm_found := random() * 100 < v_worm_chance;
+    -- Another harvest from this player may have found the worm while this call waited.
+    select exists (
+      select 1 from public.game_unlocks
+       where player_id = v_player_id and discovery_id = 800001
+    ) into v_existing_discovery;
 
-    if v_worm_found then
-      insert into public.game_unlocks (player_id, discovery_id)
-      values (v_player_id, 800001)
-      on conflict (player_id, discovery_id) do nothing;
+    if not v_existing_discovery then
+      v_worm_chance := least(100, 1 + v_failures);
+      v_worm_found := random() * 100 < v_worm_chance;
 
-      update public.game_pity_counters
-         set failures = 0, updated_at = now()
-       where player_id = v_player_id and counter_key = 'WORM_DISCOVERY';
+      if v_worm_found then
+        insert into public.game_unlocks (player_id, discovery_id)
+        values (v_player_id, 800001)
+        on conflict (player_id, discovery_id) do nothing;
+
+        update public.game_pity_counters
+           set failures = 0, updated_at = now()
+         where player_id = v_player_id and counter_key = 'WORM_DISCOVERY';
+      else
+        update public.game_pity_counters
+           set failures = failures + 1, updated_at = now()
+         where player_id = v_player_id and counter_key = 'WORM_DISCOVERY';
+      end if;
     else
-      update public.game_pity_counters
-         set failures = failures + 1, updated_at = now()
-       where player_id = v_player_id and counter_key = 'WORM_DISCOVERY';
+      v_worm_chance := 0;
     end if;
   end if;
 

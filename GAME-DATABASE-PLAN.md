@@ -100,6 +100,9 @@ No máximo uma tag de raridade e uma tag de afinidade temporal por item. Novos g
 - Não confiar em preço, quantidade, hora, raridade, drop ou badge enviados pelo navegador.
 - Enchanter e Arena consultam a badge Sacrificio no perfil original do clã; não duplicar essa badge no RPG.
 - Nunca apagar plantações que excedam temporariamente a quantidade de slots enquanto perfil e conquistas ainda estiverem carregando.
+- game.js prepara hydrateFromDatabase({ plots, inventory, discoveries, gold, slotCount, slotCapacityReady }). Enviar slotCapacityReady=false enquanto as conquistas ainda estão sendo calculadas.
+- Quando a capacidade estiver confirmada, slots ocupados acima do limite aparecem como OVER; os registros permanecem no banco. O jogador pode colher uma planta que já estava naquele slot, mas não iniciar novo plantio ali.
+- getInventoryRowsForDatabase(playerId) prepara as linhas de inventário com tag_ids incluído em cada registro.
 
 ## Estado desta versão
 

@@ -11,6 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./proprietario/perfil.js"></script>
   <script src="./app.js" defer></script>
+  <script src="./game.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -30,6 +31,9 @@
         </button>
         <button class="nav-link" type="button" data-view="members">
           <span class="nav-icon">▤</span><span>Membros</span>
+        </button>
+        <button class="nav-link game-nav-link" type="button" data-view="game" hidden>
+          <span class="nav-icon">⚒</span><span>RPG do Clã</span>
         </button>
         <button class="nav-link" type="button" data-view="requests">
           <span class="nav-icon">↗</span><span>Requests</span>
@@ -143,6 +147,44 @@
 </div>
         </section>
         <p class="footnote">Selecione uma casa para ver as vagas, a fama de cada integrante e a fama total. Fotos opcionais: coloque arquivos PNG na pasta <strong>fotos</strong>, usando o nome da casa e o número do slot (ex.: <code>morte_36.png</code>).</p>
+      </section>
+
+      <section class="view game-view" id="view-game" data-title="RPG do Clã" hidden>
+        <div class="section-intro">
+          <p class="eyebrow">SACRIFICIO RPG</p>
+          <h2>Seu mundo começa aqui</h2>
+          <p class="muted">Construa sua fazenda, reúna recursos e desbloqueie novos sistemas.</p>
+        </div>
+        <div class="game-prototype-notice">PROTÓTIPO INICIAL · AS AÇÕES AINDA NÃO SÃO SALVAS NO BANCO DE DADOS</div>
+        <div class="game-player-bar">
+          <div class="game-player-info">
+            <span class="game-label">ID DO JOGADOR</span>
+            <strong id="game-player-id">Aguardando autenticação</strong>
+          </div>
+          <div class="game-gold">
+            <span class="game-label">GOLD</span>
+            <strong><span id="game-gold-value">0</span> G</strong>
+          </div>
+        </div>
+        <div class="game-section-heading">
+          <div><p class="eyebrow">PRIMEIRO SISTEMA</p><h3>Fazenda</h3></div>
+          <span class="game-counter" id="game-plot-count">3 / 3 SLOTS</span>
+        </div>
+        <div class="game-plots" id="game-plots"></div>
+        <div class="game-section-heading game-inventory-heading">
+          <div><p class="eyebrow">SEUS RECURSOS</p><h3>Inventário</h3></div>
+        </div>
+        <div class="game-inventory-panel" id="game-inventory">
+          <p class="muted">Seu inventário está vazio.</p>
+        </div>
+        <div class="game-section-heading">
+          <div><p class="eyebrow">PROGRESSÃO</p><h3>Próximos sistemas</h3></div>
+        </div>
+        <div class="game-unlocks">
+          <div class="game-unlock-row"><span class="game-unlock-number">01</span><div><strong>Pesca</strong><small>Encontre uma minhoca na fazenda.</small></div><span class="game-lock-state">BLOQUEADO</span></div>
+          <div class="game-unlock-row"><span class="game-unlock-number">02</span><div><strong>Mineração</strong><small>Descubra a Picareta Velha durante a pesca.</small></div><span class="game-lock-state">BLOQUEADO</span></div>
+          <div class="game-unlock-row"><span class="game-unlock-number">03</span><div><strong>Forja e alquimia</strong><small>Explore a mina e encontre a Fornalha Antiga.</small></div><span class="game-lock-state">BLOQUEADO</span></div>
+        </div>
       </section>
 
       <section class="view" id="view-requests" data-title="Requests" hidden>

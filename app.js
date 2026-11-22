@@ -15,6 +15,9 @@
       })
     : null;
 
+  // Compartilhado com o módulo do RPG. O cliente usa a mesma sessão autenticada do painel.
+  window.SACRIFICIO_SUPABASE = supabaseClient;
+
   const houseOrder = ["conquista", "guerra", "fome", "morte"];
   const houseNames = {
     conquista: "Conquista",

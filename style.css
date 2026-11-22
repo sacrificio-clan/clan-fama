@@ -1173,3 +1173,126 @@ button { color: inherit; }
   .game-lock-state { grid-column: 2; }
   .game-seed-button { align-items: flex-start; flex-direction: column; }
 }
+
+
+/* RPG SACRIFICIO V1 — navegação e telas textuais, sem imagens */
+.game-view { display: grid; gap: 18px; }
+.game-prototype-notice {
+  padding: 10px 12px; border: 1px solid #62533a; border-radius: 8px;
+  background: #27231c; color: #e5c98e; font-size: 9px; font-weight: 850;
+  letter-spacing: .65px; line-height: 1.5;
+}
+.game-player-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 17px; border: 1px solid var(--border-soft); border-radius: 10px; background: var(--panel);
+}
+.game-player-info, .game-gold { min-width: 0; display: grid; gap: 7px; }
+.game-label { color: var(--muted); font-size: 9px; font-weight: 850; letter-spacing: 1px; }
+.game-player-info strong { overflow-wrap: anywhere; color: var(--text); font-size: 11px; }
+.game-gold { text-align: right; }
+.game-gold strong { color: #e8c879; font-size: 22px; font-variant-numeric: tabular-nums; }
+.game-tabs { display: flex; flex-wrap: wrap; gap: 7px; padding-bottom: 3px; border-bottom: 1px solid var(--border-soft); }
+.game-tab {
+  min-height: 37px; padding: 0 13px; border: 1px solid var(--border-soft); border-radius: 7px;
+  background: #1b1e24; color: var(--muted); font-size: 10px; font-weight: 800; cursor: pointer;
+}
+.game-tab:hover { border-color: #7b8491; color: var(--text); }
+.game-tab.is-active { border-color: #aeb7c4; background: #303640; color: #fff; }
+.game-panel { display: grid; gap: 14px; min-width: 0; }
+.game-panel[hidden] { display: none !important; }
+.game-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.game-section-heading .eyebrow { margin: 0 0 4px; }
+.game-section-heading h3 { margin: 0; color: var(--text); font-size: 19px; }
+.game-counter { color: var(--muted); font-size: 9px; font-weight: 850; letter-spacing: .7px; white-space: nowrap; }
+.game-panel-description { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.game-plots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.game-plot-card, .game-inventory-panel, .game-future-card {
+  min-width: 0; padding: 14px; border: 1px solid var(--border-soft); border-radius: 10px; background: var(--panel);
+}
+.game-plot-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.game-plot-heading strong { color: var(--text); font-size: 13px; }
+.game-plot-status, .game-lock-state { color: var(--muted); font-size: 8px; font-weight: 850; letter-spacing: .7px; }
+.game-plot-description, .game-plot-timer { min-height: 34px; margin: 13px 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.game-plot-plant-name { margin: 14px 0 4px; color: var(--text); font-size: 16px; font-weight: 800; }
+.game-plot-timer { min-height: 0; margin: 5px 0 14px; font-variant-numeric: tabular-nums; }
+.game-seed-options { display: grid; gap: 7px; }
+.game-seed-button, .game-action-button {
+  width: 100%; min-height: 39px; padding: 8px 10px; display: flex; align-items: center;
+  justify-content: space-between; gap: 8px; border: 1px solid var(--border-soft);
+  border-radius: 7px; background: #20242b; color: var(--text); text-align: left; cursor: pointer;
+}
+.game-seed-button strong { font-size: 10px; }
+.game-seed-button span { color: var(--muted); font-size: 9px; white-space: nowrap; }
+.game-seed-button:hover:not(:disabled), .game-action-button:hover:not(:disabled) { border-color: #9ca3af; background: #2b3039; }
+.game-seed-button:disabled, .game-action-button:disabled { opacity: .4; cursor: not-allowed; }
+.game-action-button { justify-content: center; font-size: 10px; font-weight: 800; }
+.game-harvest-rules, .game-tag-storage-note {
+  display: grid; gap: 6px; padding: 13px 14px; border: 1px solid var(--border-soft);
+  border-radius: 9px; background: #1a1d22;
+}
+.game-harvest-rules strong, .game-tag-storage-note strong { color: var(--text); font-size: 11px; }
+.game-harvest-rules span, .game-tag-storage-note p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.game-harvest-rules small { color: #c5b58f; font-size: 9px; line-height: 1.5; }
+.game-tag-storage-note code { display: inline-block; width: fit-content; max-width: 100%; padding: 5px 7px; border-radius: 5px; background: #292e36; color: #e5e7eb; font-size: 9px; overflow-wrap: anywhere; }
+.game-inventory-panel { display: grid; gap: 8px; min-height: 55px; }
+.game-inventory-panel > p { margin: 0; color: var(--muted); font-size: 11px; }
+.game-inventory-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center;
+  padding: 10px 11px; border: 1px solid var(--border-soft); border-radius: 7px; background: #20242b;
+}
+.game-inventory-row strong { color: var(--text); font-size: 11px; }
+.game-inventory-row span { color: var(--muted); font-size: 9px; }
+.game-inventory-row b { color: var(--text); font-size: 12px; font-variant-numeric: tabular-nums; }
+.game-tag-list { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 5px; }
+.game-tag-chip { width: fit-content; padding: 4px 6px; border: 1px solid #555d69; border-radius: 5px; color: #d7dce4 !important; font-size: 8px !important; font-weight: 850; letter-spacing: .4px; }
+.game-future-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.game-future-card { display: grid; align-content: start; gap: 7px; }
+.game-future-card strong { color: var(--text); font-size: 12px; }
+.game-future-card p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.game-future-card small { color: #c5b58f; font-size: 8px; font-weight: 850; letter-spacing: .6px; }
+.game-fishing-area-list { display: grid; gap: 8px; }
+.game-fishing-area {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px;
+  padding: 12px; border: 1px solid var(--border-soft); border-radius: 8px; background: var(--panel);
+}
+.game-fishing-area strong { color: var(--text); font-size: 11px; }
+.game-fishing-area p { margin: 4px 0 0; color: var(--muted); font-size: 9px; }
+.game-fishing-area button { min-height: 31px; padding: 0 9px; border: 1px solid var(--border-soft); border-radius: 6px; background: #242830; color: var(--text); font-size: 9px; font-weight: 800; }
+.game-fishing-area button:disabled { opacity: .55; cursor: not-allowed; }
+.game-catalog-controls { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 9px; }
+.game-catalog-controls input, .game-catalog-controls select {
+  width: 100%; min-height: 39px; padding: 8px 10px; border: 1px solid var(--border-soft);
+  border-radius: 7px; background: #1b1e24; color: var(--text); font: inherit; font-size: 10px;
+}
+.game-catalog-list { display: grid; gap: 7px; }
+.game-catalog-item {
+  display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  padding: 10px 11px; border: 1px solid var(--border-soft); border-radius: 8px; background: var(--panel);
+}
+.game-catalog-id { color: var(--muted); font-size: 10px; font-weight: 850; font-variant-numeric: tabular-nums; }
+.game-catalog-name { min-width: 0; display: grid; gap: 3px; }
+.game-catalog-name strong { color: var(--text); font-size: 11px; }
+.game-catalog-name small { color: var(--muted); font-size: 9px; }
+.game-catalog-status { color: #c5b58f; font-size: 8px; font-weight: 850; letter-spacing: .5px; text-align: right; }
+.game-progress-list { display: grid; gap: 8px; }
+.game-progress-step {
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  padding: 11px 12px; border: 1px solid var(--border-soft); border-radius: 8px; background: var(--panel);
+}
+.game-progress-step strong { color: var(--text); font-size: 11px; }
+.game-progress-step p { margin: 4px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.game-progress-number { color: var(--muted); font-size: 10px; font-weight: 900; }
+.game-status-pill { padding: 5px 7px; border: 1px solid var(--border-soft); border-radius: 5px; color: var(--muted); font-size: 8px; font-weight: 850; white-space: nowrap; }
+.game-status-pill.is-available { border-color: #596b60; color: #9bc6a7; }
+@media (max-width: 850px) { .game-plots { grid-template-columns: 1fr; } .game-future-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .game-player-bar { align-items: flex-start; flex-direction: column; }
+  .game-gold { text-align: left; }
+  .game-catalog-controls { grid-template-columns: 1fr; }
+  .game-catalog-item { grid-template-columns: 65px minmax(0, 1fr); }
+  .game-catalog-status { grid-column: 2; text-align: left; }
+  .game-progress-step { grid-template-columns: 25px minmax(0, 1fr); }
+  .game-progress-step .game-status-pill { grid-column: 2; justify-self: start; }
+  .game-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .game-tab { width: 100%; }
+}

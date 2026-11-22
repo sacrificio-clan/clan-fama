@@ -1,6 +1,8 @@
 # SACRIFICIO RPG — preparação do banco (Catálogo V1)
 
-Este documento é um plano para a próxima etapa. **Nenhuma tabela, política RLS ou função do Supabase foi criada nesta atualização.**
+Script SQL pronto para executar: `supabase/migrations/20261122160000_game_rpg_v1.sql`.
+
+Este documento descreve a estrutura e as regras. O script cria as tabelas `game_*`, popula o catálogo inicial e ativa RLS; ele ainda precisa ser executado manualmente no Supabase SQL Editor.
 
 ## Identidade do jogador
 

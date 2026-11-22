@@ -1296,3 +1296,9 @@ button { color: inherit; }
   .game-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .game-tab { width: 100%; }
 }
+
+
+/* Feedback de salvamento do RPG */
+.game-save-status { min-height: 16px; margin: -10px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.game-save-status.is-error { color: #fca5a5; }
+.game-save-status.is-success { color: #9bc6a7; }

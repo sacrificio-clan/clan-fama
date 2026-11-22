@@ -11,6 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./proprietario/perfil.js"></script>
   <script src="./app.js" defer></script>
+  <script src="./game-catalog.js" defer></script>
   <script src="./game.js" defer></script>
 </head>
 <body>
@@ -151,40 +152,110 @@
 
       <section class="view game-view" id="view-game" data-title="RPG do Clã" hidden>
         <div class="section-intro">
-          <p class="eyebrow">SACRIFICIO RPG</p>
+          <p class="eyebrow">SACRIFICIO RPG · CATÁLOGO V1</p>
           <h2>Seu mundo começa aqui</h2>
-          <p class="muted">Construa sua fazenda, reúna recursos e desbloqueie novos sistemas.</p>
+          <p class="muted">Cultive, descubra recursos e construa seu caminho. Os sistemas serão ativados por etapas.</p>
         </div>
-        <div class="game-prototype-notice">PROTÓTIPO INICIAL · AS AÇÕES AINDA NÃO SÃO SALVAS NO BANCO DE DADOS</div>
+        <div class="game-prototype-notice">PROTÓTIPO DE INTERFACE · O PROGRESSO AINDA NÃO É SALVO NO SUPABASE · GOLD E RECOMPENSAS SÃO APENAS TESTES LOCAIS</div>
         <div class="game-player-bar">
           <div class="game-player-info">
-            <span class="game-label">ID DO JOGADOR</span>
+            <span class="game-label">ID ORIGINAL DA CONTA</span>
             <strong id="game-player-id">Aguardando autenticação</strong>
           </div>
           <div class="game-gold">
-            <span class="game-label">GOLD</span>
+            <span class="game-label">GOLD DE TESTE</span>
             <strong><span id="game-gold-value">0</span> G</strong>
           </div>
         </div>
-        <div class="game-section-heading">
-          <div><p class="eyebrow">PRIMEIRO SISTEMA</p><h3>Fazenda</h3></div>
-          <span class="game-counter" id="game-plot-count">3 / 3 SLOTS</span>
-        </div>
-        <div class="game-plots" id="game-plots"></div>
-        <div class="game-section-heading game-inventory-heading">
-          <div><p class="eyebrow">SEUS RECURSOS</p><h3>Inventário</h3></div>
-        </div>
-        <div class="game-inventory-panel" id="game-inventory">
-          <p class="muted">Seu inventário está vazio.</p>
-        </div>
-        <div class="game-section-heading">
-          <div><p class="eyebrow">PROGRESSÃO</p><h3>Próximos sistemas</h3></div>
-        </div>
-        <div class="game-unlocks">
-          <div class="game-unlock-row"><span class="game-unlock-number">01</span><div><strong>Pesca</strong><small>Encontre uma minhoca na fazenda.</small></div><span class="game-lock-state">BLOQUEADO</span></div>
-          <div class="game-unlock-row"><span class="game-unlock-number">02</span><div><strong>Mineração</strong><small>Descubra a Picareta Velha durante a pesca.</small></div><span class="game-lock-state">BLOQUEADO</span></div>
-          <div class="game-unlock-row"><span class="game-unlock-number">03</span><div><strong>Forja e alquimia</strong><small>Explore a mina e encontre a Fornalha Antiga.</small></div><span class="game-lock-state">BLOQUEADO</span></div>
-        </div>
+        <nav class="game-tabs" id="game-tabs" aria-label="Sistemas do RPG">
+          <button type="button" class="game-tab is-active" data-game-tab="farm" aria-pressed="true">Fazenda</button>
+          <button type="button" class="game-tab" data-game-tab="fishing" aria-pressed="false">Pesca</button>
+          <button type="button" class="game-tab" data-game-tab="mining" aria-pressed="false">Mineração</button>
+          <button type="button" class="game-tab" data-game-tab="alchemy" aria-pressed="false">Alquimia</button>
+          <button type="button" class="game-tab" data-game-tab="inventory" aria-pressed="false">Inventário</button>
+          <button type="button" class="game-tab" data-game-tab="catalog" aria-pressed="false">Catálogo</button>
+          <button type="button" class="game-tab" data-game-tab="progress" aria-pressed="false">Progressão</button>
+        </nav>
+
+        <section class="game-panel is-active" id="game-panel-farm">
+          <div class="game-section-heading">
+            <div><p class="eyebrow">SISTEMA INICIAL</p><h3>Fazenda</h3></div>
+            <span class="game-counter" id="game-plot-count">3 / 3 SLOTS</span>
+          </div>
+          <p class="game-panel-description">As quatro culturas iniciais estão disponíveis no protótipo. A raridade será definida no momento da colheita pelo sistema oficial, não pelo navegador.</p>
+          <div class="game-plots" id="game-plots"></div>
+          <div class="game-harvest-rules">
+            <strong>Tags possíveis nos resultados de coleta</strong>
+            <span>Raridade: Dourada · Cristalizada · Especial · Mística · Celestial</span>
+            <span>Afinidade temporal: Sol · Lua</span>
+            <small>As tags são dados do item. Elas serão salvas junto com o ID e a quantidade no banco, e não serão descartadas ao acumular itens.</small>
+          </div>
+        </section>
+
+        <section class="game-panel" id="game-panel-fishing" hidden>
+          <div class="game-section-heading">
+            <div><p class="eyebrow">SISTEMA DESBLOQUEÁVEL</p><h3>Pesca</h3></div>
+            <span class="game-counter">20 ESPÉCIES · 4 LOCAIS</span>
+          </div>
+          <div id="game-fishing-content"></div>
+        </section>
+        <section class="game-panel" id="game-panel-mining" hidden>
+          <div class="game-section-heading">
+            <div><p class="eyebrow">SISTEMA DESBLOQUEÁVEL</p><h3>Mineração</h3></div>
+            <span class="game-counter">19 MATERIAIS BASE</span>
+          </div>
+          <div id="game-mining-content"></div>
+        </section>
+        <section class="game-panel" id="game-panel-alchemy" hidden>
+          <div class="game-section-heading">
+            <div><p class="eyebrow">PROCESSAMENTO</p><h3>Alquimia</h3></div>
+            <span class="game-counter">RECEITAS PREPARADAS</span>
+          </div>
+          <div id="game-alchemy-content"></div>
+        </section>
+        <section class="game-panel" id="game-panel-inventory" hidden>
+          <div class="game-section-heading">
+            <div><p class="eyebrow">DADOS DO JOGADOR</p><h3>Inventário</h3></div>
+            <span class="game-counter" id="game-inventory-count">0 PILHAS</span>
+          </div>
+          <div class="game-tag-storage-note">
+            <strong>Identidade da pilha = ID do item + conjunto exato de tags.</strong>
+            <p>Exemplo: Trigo sem tag, Trigo Dourado e Trigo Celestial são pilhas diferentes. Itens com o mesmo ID e exatamente as mesmas tags podem acumular quantidade.</p>
+            <code>player_id · item_id · quantity · tag_ids[]</code>
+          </div>
+          <div class="game-inventory-panel" id="game-inventory">
+            <p class="muted">Seu inventário está vazio neste protótipo.</p>
+          </div>
+        </section>
+        <section class="game-panel" id="game-panel-catalog" hidden>
+          <div class="game-section-heading">
+            <div><p class="eyebrow">CATÁLOGO V1</p><h3>Itens e recursos</h3></div>
+            <span class="game-counter" id="game-catalog-count">0 ITENS VISÍVEIS</span>
+          </div>
+          <p class="game-panel-description">Os IDs já estão reservados no código. Conteúdos de áreas ainda bloqueadas permanecem ocultos na interface do jogador.</p>
+          <div class="game-catalog-controls">
+            <input type="search" id="game-catalog-search" placeholder="Buscar item por nome ou ID..." aria-label="Buscar item do catálogo">
+            <select id="game-catalog-category" aria-label="Filtrar categoria">
+              <option value="all">Todas as categorias</option>
+              <option value="plant">Plantas</option>
+              <option value="seed">Sementes</option>
+              <option value="fish">Peixes</option>
+              <option value="ore">Minérios e gemas</option>
+              <option value="material">Materiais</option>
+              <option value="alchemy">Alquimia</option>
+              <option value="bait">Iscas</option>
+              <option value="tool">Ferramentas</option>
+              <option value="equipment">Equipamentos</option>
+            </select>
+          </div>
+          <div class="game-catalog-list" id="game-catalog-list"></div>
+        </section>
+        <section class="game-panel" id="game-panel-progress" hidden>
+          <div class="game-section-heading">
+            <div><p class="eyebrow">CAMINHO DO JOGADOR</p><h3>Progressão</h3></div>
+          </div>
+          <div id="game-progression-content"></div>
+        </section>
       </section>
 
       <section class="view" id="view-requests" data-title="Requests" hidden>

@@ -1101,3 +1101,75 @@ button { color: inherit; }
 .admin-members-details .admin-members-list {
   padding: 0 15px 15px;
 }
+
+
+/* RPG do Clã — interface inicial somente com texto e controles */
+.game-view { display: grid; gap: 18px; }
+.game-prototype-notice {
+  padding: 10px 12px;
+  border: 1px solid #62533a;
+  border-radius: 8px;
+  background: #27231c;
+  color: #e5c98e;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .8px;
+}
+.game-player-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 17px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.game-player-info, .game-gold { min-width: 0; display: grid; gap: 7px; }
+.game-label { color: var(--muted); font-size: 9px; font-weight: 850; letter-spacing: 1px; }
+.game-player-info strong { overflow-wrap: anywhere; color: var(--text); font-size: 12px; }
+.game-gold { text-align: right; }
+.game-gold strong { color: #e8c879; font-size: 22px; font-variant-numeric: tabular-nums; }
+.game-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-top: 7px; }
+.game-section-heading .eyebrow { margin: 0 0 4px; }
+.game-section-heading h3 { margin: 0; color: var(--text); font-size: 19px; }
+.game-counter { color: var(--muted); font-size: 9px; font-weight: 850; letter-spacing: .7px; }
+.game-plots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.game-plot-card, .game-inventory-panel, .game-unlocks {
+  min-width: 0; padding: 14px; border: 1px solid var(--border-soft);
+  border-radius: 10px; background: var(--panel);
+}
+.game-plot-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.game-plot-heading strong { color: var(--text); font-size: 13px; }
+.game-plot-status, .game-lock-state { color: var(--muted); font-size: 8px; font-weight: 850; letter-spacing: .7px; }
+.game-plot-description, .game-plot-timer { min-height: 34px; margin: 13px 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.game-plot-plant-name { margin: 14px 0 4px; color: var(--text); font-size: 16px; font-weight: 800; }
+.game-plot-timer { min-height: 0; margin: 5px 0 14px; font-variant-numeric: tabular-nums; }
+.game-seed-options { display: grid; gap: 7px; }
+.game-seed-button, .game-action-button {
+  width: 100%; min-height: 39px; padding: 8px 10px; display: flex; align-items: center;
+  justify-content: space-between; gap: 8px; border: 1px solid var(--border-soft);
+  border-radius: 7px; background: #20242b; color: var(--text); text-align: left; cursor: pointer;
+}
+.game-seed-button strong { font-size: 10px; }
+.game-seed-button span { color: var(--muted); font-size: 9px; white-space: nowrap; }
+.game-seed-button:hover:not(:disabled), .game-action-button:hover:not(:disabled) { border-color: #9ca3af; background: #2b3039; }
+.game-seed-button:disabled, .game-action-button:disabled { opacity: .4; cursor: not-allowed; }
+.game-action-button { justify-content: center; font-size: 10px; font-weight: 800; }
+.game-inventory-panel { min-height: 55px; }
+.game-inventory-panel p { margin: 0; font-size: 11px; }
+.game-unlocks { display: grid; gap: 0; }
+.game-unlock-row { min-height: 58px; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-soft); }
+.game-unlock-row:last-child { border-bottom: 0; }
+.game-unlock-number { color: var(--muted); font-size: 11px; font-weight: 850; }
+.game-unlock-row div { min-width: 0; display: grid; gap: 4px; }
+.game-unlock-row strong { color: var(--text); font-size: 11px; }
+.game-unlock-row small { color: var(--muted); font-size: 9px; line-height: 1.4; }
+@media (max-width: 850px) { .game-plots { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .game-player-bar { align-items: flex-start; flex-direction: column; }
+  .game-gold { text-align: left; }
+  .game-unlock-row { grid-template-columns: 26px minmax(0, 1fr); padding: 9px 0; }
+  .game-lock-state { grid-column: 2; }
+  .game-seed-button { align-items: flex-start; flex-direction: column; }
+}

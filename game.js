@@ -10,6 +10,8 @@
   // Estado temporário de interface. O estado real virá do Supabase após criarmos as tabelas.
   const state = {
     gold: 0,
+    slotCount: 3,
+    slotCapacityReady: true,
     plots: [null, null, null],
     inventory: [],
     discoveries: [],
@@ -94,35 +96,45 @@
   function renderFarm() {
     elements.gold.textContent = String(state.gold);
     elements.playerId.textContent = window.SACRIFICIO_AUTH_USER_ID || "Aguardando autenticação";
-    elements.plotCount.textContent = state.plots.length + " / 3 SLOTS";
+    elements.plotCount.textContent = state.slotCount + " SLOTS ATIVOS · " + state.plots.length + " REGISTRADOS";
     elements.plots.replaceChildren();
 
     state.plots.forEach((plot, index) => {
+      const beyondCapacity = index >= state.slotCount;
+      const slotOver = beyondCapacity && state.slotCapacityReady;
+      const capacityPending = beyondCapacity && !state.slotCapacityReady;
       const card = makeElement("article", "game-plot-card");
       const heading = makeElement("div", "game-plot-heading");
+      let statusText = slotOver ? "OVER" : capacityPending ? "VERIFICANDO" : plot ? (Date.now() >= plot.finishesAt ? "PRONTA" : "CRESCENDO") : "VAZIO";
       heading.append(
         makeElement("strong", "", "Slot " + (index + 1)),
-        makeElement("span", "game-plot-status", plot ? (Date.now() >= plot.finishesAt ? "PRONTA" : "CRESCENDO") : "VAZIO")
+        makeElement("span", "game-plot-status", statusText)
       );
       card.appendChild(heading);
 
       if (!plot) {
-        card.appendChild(makeElement("p", "game-plot-description", "Escolha uma cultura para plantar neste terreno."));
-        const actions = makeElement("div", "game-seed-options");
-        CATALOG.starterPlants.forEach(plant => {
-          const button = makeElement("button", "game-seed-button");
-          button.type = "button";
-          button.dataset.action = "plant";
-          button.dataset.plot = String(index);
-          button.dataset.itemId = String(plant.id);
-          button.disabled = state.gold < plant.seedCost;
-          button.append(
-            makeElement("strong", "", plant.name),
-            makeElement("span", "", plant.growthHours + "h · " + plant.seedCost + " G · +" + plant.goldReward + " G")
-          );
-          actions.appendChild(button);
-        });
-        card.appendChild(actions);
+        if (slotOver) {
+          card.appendChild(makeElement("p", "game-plot-description", "Slot acima da capacidade atual. Nenhum dado será removido."));
+        } else if (capacityPending) {
+          card.appendChild(makeElement("p", "game-plot-description", "Verificando conquistas e capacidade de slots. Este espaço ainda não pode receber novas plantas."));
+        } else {
+          card.appendChild(makeElement("p", "game-plot-description", "Escolha uma cultura para plantar neste terreno."));
+          const actions = makeElement("div", "game-seed-options");
+          CATALOG.starterPlants.forEach(plant => {
+            const button = makeElement("button", "game-seed-button");
+            button.type = "button";
+            button.dataset.action = "plant";
+            button.dataset.plot = String(index);
+            button.dataset.itemId = String(plant.id);
+            button.disabled = state.gold < plant.seedCost;
+            button.append(
+              makeElement("strong", "", plant.name),
+              makeElement("span", "", plant.growthHours + "h · " + plant.seedCost + " G · +" + plant.goldReward + " G")
+            );
+            actions.appendChild(button);
+          });
+          card.appendChild(actions);
+        }
       } else {
         const plant = CATALOG.getItem(plot.itemId);
         const ready = Date.now() >= plot.finishesAt;
@@ -130,6 +142,7 @@
           makeElement("p", "game-plot-plant-name", plant ? plant.name : "Planta desconhecida"),
           makeElement("p", "game-plot-timer", ready ? "Colheita disponível" : "Tempo restante: " + formatRemaining(plot.finishesAt - Date.now()))
         );
+        if (slotOver) card.appendChild(makeElement("p", "game-panel-description", "OVER: a plantação foi preservada. O jogador ainda pode colher o que já estava plantado."));
         const button = makeElement("button", "game-action-button", ready ? "Colher · +" + plot.goldReward + " G" : "Aguardando crescimento");
         button.type = "button";
         button.dataset.action = "harvest";
@@ -401,7 +414,7 @@
 
     if (button.dataset.action === "plant" && !state.plots[plotIndex]) {
       const plant = CATALOG.getItem(Number(button.dataset.itemId));
-      if (!plant || !plant.starter || state.gold < plant.seedCost) return;
+      if (!plant || !plant.starter || plotIndex >= state.slotCount || state.gold < plant.seedCost) return;
       state.gold -= plant.seedCost;
       state.plots[plotIndex] = {
         itemId: plant.id,
@@ -448,10 +461,66 @@
   }
 
   // API temporária para a futura integração com o Supabase; não grava nem autoriza ações no servidor.
+  function hydrateFromDatabase(data = {}) {
+    // Chamado pela futura integração. Não descarta plots fora da capacidade enquanto ela não estiver confirmada.
+    const parsedGold = Number(data.gold);
+    state.gold = Number.isSafeInteger(parsedGold) && parsedGold >= 0 ? parsedGold : 0;
+
+    const suppliedSlotCount = Number(data.slotCount);
+    state.slotCount = Number.isSafeInteger(suppliedSlotCount) && suppliedSlotCount >= 3 ? suppliedSlotCount : 3;
+    state.slotCapacityReady = data.slotCapacityReady === true;
+
+    const plotRows = Array.isArray(data.plots) ? data.plots : [];
+    const maxSavedIndex = plotRows.reduce((max, row) => {
+      const index = Number(row.slot_index ?? row.slotIndex);
+      return Number.isInteger(index) && index >= 0 ? Math.max(max, index) : max;
+    }, -1);
+    const plotArrayLength = Math.max(3, state.slotCount, maxSavedIndex + 1);
+    state.plots = Array.from({ length: plotArrayLength }, () => null);
+    plotRows.forEach(row => {
+      const index = Number(row.slot_index ?? row.slotIndex);
+      if (!Number.isInteger(index) || index < 0 || index >= state.plots.length) return;
+      const itemId = Number(row.plant_item_id ?? row.itemId);
+      const plant = CATALOG.getItem(itemId);
+      const rawFinish = row.finishes_at ?? row.finishesAt;
+      const finishTime = typeof rawFinish === "number" ? rawFinish : Date.parse(rawFinish);
+      if (!plant || !Number.isFinite(finishTime)) return;
+      state.plots[index] = {
+        itemId,
+        seedItemId: Number(row.seed_item_id ?? row.seedItemId ?? plant.seedItemId ?? 0),
+        finishesAt: finishTime,
+        goldReward: Number(row.gold_reward ?? row.goldReward ?? plant.goldReward ?? 0)
+      };
+    });
+
+    state.inventory = CATALOG.mergeInventoryStacks(Array.isArray(data.inventory) ? data.inventory : []);
+    const discoveryById = new Map(CATALOG.discoveries.map(discovery => [discovery.id, discovery.key]));
+    state.discoveries = (Array.isArray(data.discoveries) ? data.discoveries : []).map(entry => {
+      const value = typeof entry === "object" && entry !== null
+        ? (entry.discovery_id ?? entry.id ?? entry.key)
+        : entry;
+      return typeof value === "number" ? discoveryById.get(value) : String(value);
+    }).filter(Boolean);
+    state.unlockedFishingAreaIds = getUnlockedFishingAreaIds();
+    if (!state.unlockedFishingAreaIds.includes(state.selectedFishingAreaId)) {
+      state.selectedFishingAreaId = state.unlockedFishingAreaIds[0] || 210001;
+      state.selectedFishId = null;
+    }
+    renderAll();
+  }
+
+  function getInventoryRowsForDatabase(playerId = window.SACRIFICIO_AUTH_USER_ID) {
+    return state.inventory.map(stack => CATALOG.toDatabaseInventoryRow(playerId, stack));
+  }
+
   window.SACRIFICIO_GAME = Object.freeze({
     catalog: CATALOG,
+    hydrateFromDatabase,
+    getInventoryRowsForDatabase,
     getTemporaryState: () => ({
       gold: state.gold,
+      slotCount: state.slotCount,
+      slotCapacityReady: state.slotCapacityReady,
       plots: state.plots.map(plot => plot ? { ...plot } : null),
       inventory: state.inventory.map(stack => ({ ...stack, tag_ids: [...stack.tag_ids] })),
       discoveries: [...state.discoveries]

@@ -157,6 +157,7 @@
     [400010, "material.metal_chain", "Corrente Metálica", "Forja"],
     [400011, "material.reinforced_alloy", "Liga Reforçada", "Forja"],
     [400012, "material.solidified_crystal", "Cristal Solidificado", "Solidificador"],
+    [400013, "material.raw_glass", "Vidro Bruto", "Coleta com Pá", "SHOVEL_AND_GLASS"],
     [400051, "material.common_scale", "Escama Comum", "Extração alquímica"],
     [400052, "material.rare_scale", "Escama Rara", "Extração alquímica"],
     [400053, "material.abyssal_scale", "Escama Abissal", "Extração alquímica"],
@@ -169,11 +170,11 @@
     [400103, "material.special_pollen", "Pólen Especial", "Extração alquímica"],
     [400104, "material.luminous_spores", "Esporos Luminosos", "Extração alquímica"]
   ];
-  processedMaterials.forEach(([id, key, name, source]) => add(id, key, name, "material", source, {
+  processedMaterials.forEach(([id, key, name, source, explicitUnlockKey]) => add(id, key, name, "material", source, {
     visibleAtStart: false,
-    unlockKey: source === "Extração alquímica" ? "ALCHEMY_SET_I" : "ANCIENT_FURNACE_FOUND",
+    unlockKey: explicitUnlockKey || (source === "Extração alquímica" ? "ALCHEMY_SET_I" : "ANCIENT_FURNACE_FOUND"),
     taggable: true,
-    note: "Material processado; regras de herança de tags serão definidas por receita."
+    note: source === "Coleta com Pá" ? "Material bruto coletado após fabricar a pá." : "Material processado; regras de herança de tags serão definidas por receita."
   }));
 
   const alchemyItems = [
@@ -276,15 +277,15 @@
     { id: 900009, key: "UPGRADE_ALCHEMY_II", name: "Aprimorar Conjunto de Alquimia", status: "planned", stationId: 700003 },
     { id: 900010, key: "CRAFT_SOLIDIFIER", name: "Construir Solidificador", status: "planned", stationId: 700004 },
     { id: 900011, key: "MAKE_ENCHANTMENT_CATALYST", name: "Produzir Catalisador de Encantamento", status: "planned", stationId: 700004 },
-    { id: 900012, key: "CRAFT_ENCHANTER", name: "Construir Enchanter", status: "planned", stationId: 700005, requiresBadgeKey: "SACRIFICIO" },
-    { id: 900013, key: "CRAFT_ARENA", name: "Construir Arena", status: "planned", stationId: 700002, requiresBadgeKey: "SACRIFICIO" },
+    { id: 900012, key: "CRAFT_ENCHANTER", name: "Construir Enchanter", status: "planned", requiresBadgeKey: "SACRIFICIO", materialsPending: true },
+    { id: 900013, key: "CRAFT_ARENA", name: "Construir Arena", status: "planned", requiresBadgeKey: "SACRIFICIO", materialsPending: true },
     { id: 900101, key: "MAKE_MANDRAKE_SEED", name: "Produzir Semente de Mandrágora", status: "draft", outputItemId: 101007, stationId: 700003, ingredientsPending: true },
     { id: 900102, key: "MAKE_PRISMATIC_SEED", name: "Produzir Semente Prismática", status: "draft", outputItemId: 101008, stationId: 700004, ingredientsPending: true },
     { id: 900103, key: "MAKE_ETHEREAL_SEED", name: "Produzir Semente Etérea", status: "draft", outputItemId: 101009, stationId: 700004, ingredientsPending: true },
     {
       id: 900120, key: "MAKE_PAVRANIUM", name: "Produzir Pavranium", status: "draft",
       outputItemId: 300019, stationIds: [700004, 700006],
-      inputItemIds: Array.from({ length: 16 }, (_, index) => 300003 + index),
+      inputItemIds: [...Array.from({ length: 16 }, (_, index) => 300003 + index), 500008],
       requiresBadgeKey: "SACRIFICIO", ingredientsPending: true,
       note: "Exige os minérios e gemas cadastrados, combinados por alquimia e encantamento. Não pode ser minerado."
     }

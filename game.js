@@ -13,7 +13,9 @@
     plots: [null, null, null],
     inventory: [],
     discoveries: [],
-    unlockedFishingAreaIds: []
+    unlockedFishingAreaIds: [],
+    selectedFishingAreaId: 210001,
+    selectedFishId: null
   };
 
   const elements = {
@@ -223,13 +225,47 @@
         makeElement("strong", "", unlocked ? area.name : "Local " + (index + 1) + " · Bloqueado"),
         makeElement("p", "", unlocked ? "5 espécies disponíveis neste local." : "Novo local de pesca ainda não descoberto.")
       );
-      const button = makeElement("button", "", unlocked ? "SELECIONAR" : "BLOQUEADO");
+      const button = makeElement("button", "", unlocked ? (state.selectedFishingAreaId === area.id ? "LOCAL ATUAL" : "VER PEIXES") : "BLOQUEADO");
       button.type = "button";
-      button.disabled = true;
+      button.dataset.areaId = String(area.id);
+      button.disabled = !unlocked;
       row.append(copy, button);
       areaList.appendChild(row);
     });
     elements.fishing.appendChild(areaList);
+
+    const unlockedAreaIds = getUnlockedFishingAreaIds();
+    if (unlockedAreaIds.length) {
+      if (!unlockedAreaIds.includes(state.selectedFishingAreaId)) {
+        state.selectedFishingAreaId = unlockedAreaIds[0];
+        state.selectedFishId = null;
+      }
+      const selectedArea = CATALOG.fishingAreas.find(area => area.id === state.selectedFishingAreaId);
+      const fishCard = makeElement("div", "game-future-card");
+      fishCard.appendChild(makeElement("strong", "", selectedArea ? selectedArea.name + " · Espécies disponíveis" : "Peixes disponíveis"));
+      const fishList = makeElement("div", "game-future-grid");
+      (selectedArea ? selectedArea.fishIds : []).forEach(fishId => {
+        const fish = CATALOG.getItem(fishId);
+        if (!fish) return;
+        const fishRow = makeElement("div", "game-future-card");
+        fishRow.append(
+          makeElement("strong", "", fish.name),
+          makeElement("small", "", "ID " + fish.id + " · TAGS VARIÁVEIS")
+        );
+        const selectFish = makeElement("button", "game-action-button", state.selectedFishId === fish.id ? "PEIXE SELECIONADO" : "SELECIONAR PEIXE");
+        selectFish.type = "button";
+        selectFish.dataset.action = "select-fish";
+        selectFish.dataset.fishId = String(fish.id);
+        fishRow.appendChild(selectFish);
+        fishList.appendChild(fishRow);
+      });
+      fishCard.appendChild(fishList);
+      elements.fishing.appendChild(fishCard);
+      if (state.selectedFishId) {
+        const selectedFish = CATALOG.getItem(state.selectedFishId);
+        elements.fishing.appendChild(makeElement("p", "game-panel-description", "Alvo escolhido: " + (selectedFish ? selectedFish.name : "Peixe") + ". O botão de iniciar a pescaria será ativado após a integração com o banco."));
+      }
+    }
 
     const baitCard = makeElement("div", "game-future-card");
     baitCard.append(
@@ -308,6 +344,28 @@
     );
     elements.progression.appendChild(badgeNote);
   }
+
+  elements.fishing.addEventListener("click", event => {
+    const areaButton = event.target.closest("button[data-area-id]");
+    if (areaButton && !areaButton.disabled) {
+      const nextAreaId = Number(areaButton.dataset.areaId);
+      if (getUnlockedFishingAreaIds().includes(nextAreaId)) {
+        state.selectedFishingAreaId = nextAreaId;
+        state.selectedFishId = null;
+        renderFishing();
+      }
+      return;
+    }
+    const fishButton = event.target.closest("button[data-action='select-fish']");
+    if (fishButton) {
+      const fishId = Number(fishButton.dataset.fishId);
+      const fish = CATALOG.getItem(fishId);
+      if (fish && getUnlockedFishingAreaIds().includes(fish.areaId)) {
+        state.selectedFishId = fishId;
+        renderFishing();
+      }
+    }
+  });
 
   elements.plots.addEventListener("click", event => {
     const button = event.target.closest("button[data-action]");

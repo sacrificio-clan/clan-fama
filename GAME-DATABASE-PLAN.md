@@ -112,3 +112,15 @@ No máximo uma tag de raridade e uma tag de afinidade temporal por item. Novos g
 - Interface e protótipo local no GitHub.
 - Supabase ainda não foi alterado.
 - Pesca, mineração, alquimia, drops raros, tags aleatórias e progresso persistente permanecem desativados até a integração com o banco e validações do servidor.
+
+
+## Salvamento inicial — segunda migration
+
+Depois da criação inicial do esquema, execute também `supabase/migrations/20261122170000_game_save_v1.sql`.
+
+Ela cria:
+- `game_get_state()`: retorna Gold, plantações, inventário com `tag_ids` e descobertas do usuário autenticado.
+- `game_start_planting(slot, plant_id)`: valida custo, slot, cultura e tempo no servidor.
+- `game_harvest_plot(slot)`: valida o término, credita Gold, registra o item com tags, grava histórico e faz a rolagem da minhoca com pity persistente.
+
+A interface chama essas funções por RPC. Não são criadas permissões de escrita direta nas tabelas para o navegador. O salvamento de pesca, mineração, alquimia e crafting será incluído quando cada mecânica for implementada.

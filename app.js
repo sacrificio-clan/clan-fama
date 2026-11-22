@@ -1231,6 +1231,11 @@
       publicState.appendChild(document.createTextNode(currentSession ? "Sessão ativa" : "Área pública"));
     }
 
+    window.SACRIFICIO_AUTH_USER_ID = currentSession ? currentSession.user.id : null;
+    const gameNav = document.querySelector('[data-view="game"]');
+    if (gameNav) gameNav.hidden = !currentSession;
+    window.dispatchEvent(new Event("sacrificio:auth-updated"));
+
     const requestsLock = document.querySelector('[data-view="requests"] .nav-lock');
     if (requestsLock) requestsLock.hidden = Boolean(currentSession);
 
@@ -2032,6 +2037,12 @@
     const target = document.getElementById("view-" + name);
     if (!target) return false;
 
+    if (name === "game" && !currentSession) {
+      setLoginMessage("Entre com sua conta para acessar o RPG do clã.", "");
+      if (typeof loginDialog.showModal === "function") loginDialog.showModal();
+      return false;
+    }
+
     if ((name === "requests" || name === "settings") && !currentSession) {
       setLoginMessage("Entre com sua conta para acessar esta área.", "");
       if (typeof loginDialog.showModal === "function") loginDialog.showModal();
@@ -2189,6 +2200,7 @@
     const initialViews = {
       "visao-geral": "overview",
       "members": "members",
+      "game": "game",
       "requests": "requests",
       "settings": "settings"
     };

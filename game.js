@@ -7,18 +7,20 @@
     return;
   }
 
-  // Estado temporário de interface. O estado real virá do Supabase após criarmos as tabelas.
   const state = {
     gold: 0,
     slotCount: 3,
-    slotCapacityReady: true,
+    slotCapacityReady: false,
     plots: [null, null, null],
     inventory: [],
     discoveries: [],
     unlockedFishingAreaIds: [],
     selectedFishingAreaId: 210001,
-    selectedFishId: null
+    selectedFishId: null,
+    busy: false
   };
+
+  let loadVersion = 0;
 
   const elements = {
     playerId: document.getElementById("game-player-id"),
@@ -34,7 +36,8 @@
     fishing: document.getElementById("game-fishing-content"),
     mining: document.getElementById("game-mining-content"),
     alchemy: document.getElementById("game-alchemy-content"),
-    progression: document.getElementById("game-progression-content")
+    progression: document.getElementById("game-progression-content"),
+    saveStatus: document.getElementById("game-save-status")
   };
   if (Object.values(elements).some(element => !element)) return;
 
@@ -43,6 +46,12 @@
     if (className) node.className = className;
     if (text !== undefined && text !== null) node.textContent = String(text);
     return node;
+  }
+
+  function setStatus(message, isError = false) {
+    elements.saveStatus.textContent = message || "";
+    elements.saveStatus.classList.toggle("is-error", Boolean(isError));
+    elements.saveStatus.classList.toggle("is-success", Boolean(message) && !isError);
   }
 
   function hasDiscovery(key) {
@@ -77,18 +86,13 @@
     allowed.forEach(name => {
       const panel = document.getElementById("game-panel-" + name);
       if (!panel) return;
-      const active = name === panelName;
-      panel.hidden = !active;
-      panel.classList.toggle("is-active", active);
+      panel.hidden = name !== panelName;
+      panel.classList.toggle("is-active", name === panelName);
     });
     const renderers = {
-      farm: renderFarm,
-      fishing: renderFishing,
-      mining: renderMining,
-      alchemy: renderAlchemy,
-      inventory: renderInventory,
-      catalog: renderCatalog,
-      progress: renderProgression
+      farm: renderFarm, fishing: renderFishing, mining: renderMining,
+      alchemy: renderAlchemy, inventory: renderInventory,
+      catalog: renderCatalog, progress: renderProgression
     };
     renderers[panelName]();
   }
@@ -105,18 +109,18 @@
       const capacityPending = beyondCapacity && !state.slotCapacityReady;
       const card = makeElement("article", "game-plot-card");
       const heading = makeElement("div", "game-plot-heading");
-      let statusText = slotOver ? "OVER" : capacityPending ? "VERIFICANDO" : plot ? (Date.now() >= plot.finishesAt ? "PRONTA" : "CRESCENDO") : "VAZIO";
+      const status = slotOver ? "OVER" : capacityPending ? "VERIFICANDO" : plot ? (Date.now() >= plot.finishesAt ? "PRONTA" : "CRESCENDO") : "VAZIO";
       heading.append(
         makeElement("strong", "", "Slot " + (index + 1)),
-        makeElement("span", "game-plot-status", statusText)
+        makeElement("span", "game-plot-status", status)
       );
       card.appendChild(heading);
 
       if (!plot) {
         if (slotOver) {
-          card.appendChild(makeElement("p", "game-plot-description", "Slot acima da capacidade atual. Nenhum dado será removido."));
+          card.appendChild(makeElement("p", "game-plot-description", "Slot acima da capacidade. Nenhum dado será removido."));
         } else if (capacityPending) {
-          card.appendChild(makeElement("p", "game-plot-description", "Verificando conquistas e capacidade de slots. Este espaço ainda não pode receber novas plantas."));
+          card.appendChild(makeElement("p", "game-plot-description", "Aguardando confirmação das conquistas e dos slots."));
         } else {
           card.appendChild(makeElement("p", "game-plot-description", "Escolha uma cultura para plantar neste terreno."));
           const actions = makeElement("div", "game-seed-options");
@@ -126,7 +130,7 @@
             button.dataset.action = "plant";
             button.dataset.plot = String(index);
             button.dataset.itemId = String(plant.id);
-            button.disabled = state.gold < plant.seedCost;
+            button.disabled = state.busy || state.gold < plant.seedCost;
             button.append(
               makeElement("strong", "", plant.name),
               makeElement("span", "", plant.growthHours + "h · " + plant.seedCost + " G · +" + plant.goldReward + " G")
@@ -142,12 +146,12 @@
           makeElement("p", "game-plot-plant-name", plant ? plant.name : "Planta desconhecida"),
           makeElement("p", "game-plot-timer", ready ? "Colheita disponível" : "Tempo restante: " + formatRemaining(plot.finishesAt - Date.now()))
         );
-        if (slotOver) card.appendChild(makeElement("p", "game-panel-description", "OVER: a plantação foi preservada. O jogador ainda pode colher o que já estava plantado."));
-        const button = makeElement("button", "game-action-button", ready ? "Colher · +" + plot.goldReward + " G" : "Aguardando crescimento");
+        if (slotOver) card.appendChild(makeElement("p", "game-panel-description", "OVER: a planta foi preservada. Você ainda pode colher o que já estava plantado."));
+        const button = makeElement("button", "game-action-button", state.busy ? "SALVANDO..." : ready ? "Colher · +" + plot.goldReward + " G" : "Aguardando crescimento");
         button.type = "button";
         button.dataset.action = "harvest";
         button.dataset.plot = String(index);
-        button.disabled = !ready;
+        button.disabled = state.busy || !ready;
         card.appendChild(button);
       }
       elements.plots.appendChild(card);
@@ -158,7 +162,7 @@
     elements.inventory.replaceChildren();
     elements.inventoryCount.textContent = state.inventory.length + " PILHAS";
     if (!state.inventory.length) {
-      elements.inventory.appendChild(makeElement("p", "", "Seu inventário está vazio neste protótipo."));
+      elements.inventory.appendChild(makeElement("p", "", "Seu inventário está vazio."));
       return;
     }
 
@@ -276,29 +280,16 @@
       elements.fishing.appendChild(fishCard);
       if (state.selectedFishId) {
         const selectedFish = CATALOG.getItem(state.selectedFishId);
-        elements.fishing.appendChild(makeElement("p", "game-panel-description", "Alvo escolhido: " + (selectedFish ? selectedFish.name : "Peixe") + ". O botão de iniciar a pescaria será ativado após a integração com o banco."));
+        elements.fishing.appendChild(makeElement("p", "game-panel-description", "Alvo escolhido: " + (selectedFish ? selectedFish.name : "Peixe") + ". O início da pescaria será ativado após a próxima etapa."));
       }
     }
 
     const baitCard = makeElement("div", "game-future-card");
     baitCard.append(
       makeElement("strong", "", "Sistema de iscas preparado"),
-      makeElement("p", "", "Pesca sem isca permanece possível. Isca Simples, Isca Reforçada e Isca Mística terão bônus de Luck e redução de tempo; os valores serão balanceados antes de ativar a mecânica.")
+      makeElement("p", "", "Pesca sem isca permanece possível. Isca Simples, Isca Reforçada e Isca Mística terão bônus de Luck e redução de tempo; valores ainda serão balanceados.")
     );
     elements.fishing.appendChild(baitCard);
-    if (hasDiscovery("WORM_FOUND")) {
-      const baitList = makeElement("div", "game-future-grid");
-      CATALOG.baits.forEach(bait => {
-        const baitRow = makeElement("div", "game-future-card");
-        baitRow.append(
-          makeElement("strong", "", bait.name),
-          makeElement("small", "", "ID " + bait.id),
-          makeElement("p", "", "Luck: a definir · Redução de tempo: a definir")
-        );
-        baitList.appendChild(baitRow);
-      });
-      elements.fishing.appendChild(baitList);
-    }
   }
 
   function renderMining() {
@@ -307,11 +298,10 @@
     const card = makeElement("div", "game-future-card");
     card.append(
       makeElement("small", "", unlocked ? "DESCOBERTO" : "BLOQUEADO"),
-      makeElement("strong", "", unlocked ? "Mineração disponível após integração" : "Encontre a Picareta Velha durante a pesca"),
+      makeElement("strong", "", unlocked ? "Mineração preparada para integração" : "Encontre a Picareta Velha durante a pesca"),
       makeElement("p", "", "O catálogo inclui pedra, carvão, cobre, ferro, prata, ouro, cristais, gemas, Orichalco, Adamantio, Mytril, Titânio, Cobalto e Paládio. Pavranium não pode ser minerado.")
     );
     elements.mining.appendChild(card);
-
     if (unlocked) {
       const mineralList = makeElement("div", "game-future-grid");
       CATALOG.minerals.filter(mineral => mineral.id !== 300019).forEach(mineral => {
@@ -324,7 +314,6 @@
       });
       elements.mining.appendChild(mineralList);
     }
-
     const seedCard = makeElement("div", "game-future-card");
     seedCard.append(
       makeElement("strong", "", "Drops especiais de sementes"),
@@ -342,19 +331,17 @@
       makeElement("p", "", "Peixes serão processados para extrair escamas e outros materiais. Plantas e minérios também poderão fornecer extratos e essências.")
     );
     elements.alchemy.appendChild(card);
-
     const seedCard = makeElement("div", "game-future-card");
     seedCard.append(
       makeElement("strong", "", "Três sementes exclusivas da alquimia"),
       makeElement("p", "", "Mandrágora, Flor Prismática e Orquídea Etérea terão receitas próprias. Ingredientes e quantidades ainda serão definidos.")
     );
     elements.alchemy.appendChild(seedCard);
-
     const pavranium = makeElement("div", "game-future-card");
     pavranium.append(
       makeElement("small", "", "RECEITA DE ENDGAME · ID 300019"),
       makeElement("strong", "", "Pavranium"),
-      makeElement("p", "", "Produção exclusiva por alquimia e encantamento, exigindo os minérios e gemas do catálogo. Não aparece como drop de mineração.")
+      makeElement("p", "", "Produção exclusiva por alquimia e encantamento, exigindo os minérios e gemas do catálogo. Não aparece como drop da mineração.")
     );
     elements.alchemy.appendChild(pavranium);
   }
@@ -375,7 +362,6 @@
       list.appendChild(row);
     });
     elements.progression.appendChild(list);
-
     const badgeNote = makeElement("div", "game-future-card");
     badgeNote.append(
       makeElement("strong", "", "Badge Sacrificio"),
@@ -384,99 +370,19 @@
     elements.progression.appendChild(badgeNote);
   }
 
-  elements.fishing.addEventListener("click", event => {
-    const areaButton = event.target.closest("button[data-area-id]");
-    if (areaButton && !areaButton.disabled) {
-      const nextAreaId = Number(areaButton.dataset.areaId);
-      if (getUnlockedFishingAreaIds().includes(nextAreaId)) {
-        state.selectedFishingAreaId = nextAreaId;
-        state.selectedFishId = null;
-        renderFishing();
-      }
-      return;
-    }
-    const fishButton = event.target.closest("button[data-action='select-fish']");
-    if (fishButton) {
-      const fishId = Number(fishButton.dataset.fishId);
-      const fish = CATALOG.getItem(fishId);
-      if (fish && getUnlockedFishingAreaIds().includes(fish.areaId)) {
-        state.selectedFishId = fishId;
-        renderFishing();
-      }
-    }
-  });
-
-  elements.plots.addEventListener("click", event => {
-    const button = event.target.closest("button[data-action]");
-    if (!button || button.disabled) return;
-    const plotIndex = Number(button.dataset.plot);
-    if (!Number.isInteger(plotIndex) || plotIndex < 0 || plotIndex >= state.plots.length) return;
-
-    if (button.dataset.action === "plant" && !state.plots[plotIndex]) {
-      const plant = CATALOG.getItem(Number(button.dataset.itemId));
-      if (!plant || !plant.starter || plotIndex >= state.slotCount || state.gold < plant.seedCost) return;
-      state.gold -= plant.seedCost;
-      state.plots[plotIndex] = {
-        itemId: plant.id,
-        finishesAt: Date.now() + plant.growthHours * 60 * 60 * 1000,
-        goldReward: plant.goldReward
-      };
-      renderFarm();
-    }
-
-    if (button.dataset.action === "harvest") {
-      const plot = state.plots[plotIndex];
-      if (!plot || Date.now() < plot.finishesAt) return;
-      // Não rolar raridade no navegador; o servidor fará o sorteio após a integração.
-      state.inventory = CATALOG.addInventoryStack(state.inventory, plot.itemId, 1, []);
-      state.gold += plot.goldReward;
-      state.plots[plotIndex] = null;
-      renderFarm();
-      renderInventory();
-      renderCatalog();
-    }
-  });
-
-  document.getElementById("game-tabs").addEventListener("click", event => {
-    const button = event.target.closest("[data-game-tab]");
-    if (button) showGamePanel(button.dataset.gameTab);
-  });
-  elements.catalogSearch.addEventListener("input", renderCatalog);
-  elements.catalogCategory.addEventListener("change", renderCatalog);
-
-  window.addEventListener("sacrificio:auth-updated", () => {
-    elements.playerId.textContent = window.SACRIFICIO_AUTH_USER_ID || "Aguardando autenticação";
-  });
-
-  function renderAll() {
-    elements.playerId.textContent = window.SACRIFICIO_AUTH_USER_ID || "Aguardando autenticação";
-    elements.gold.textContent = String(state.gold);
-    renderFarm();
-    renderFishing();
-    renderMining();
-    renderAlchemy();
-    renderInventory();
-    renderCatalog();
-    renderProgression();
-  }
-
-  // API temporária para a futura integração com o Supabase; não grava nem autoriza ações no servidor.
   function hydrateFromDatabase(data = {}) {
-    // Chamado pela futura integração. Não descarta plots fora da capacidade enquanto ela não estiver confirmada.
     const parsedGold = Number(data.gold);
     state.gold = Number.isSafeInteger(parsedGold) && parsedGold >= 0 ? parsedGold : 0;
-
-    const suppliedSlotCount = Number(data.slotCount);
+    const suppliedSlotCount = Number(data.slot_count ?? data.slotCount);
     state.slotCount = Number.isSafeInteger(suppliedSlotCount) && suppliedSlotCount >= 3 ? suppliedSlotCount : 3;
-    state.slotCapacityReady = data.slotCapacityReady === true;
+    state.slotCapacityReady = data.slot_capacity_ready === true || data.slotCapacityReady === true;
 
     const plotRows = Array.isArray(data.plots) ? data.plots : [];
     const maxSavedIndex = plotRows.reduce((max, row) => {
       const index = Number(row.slot_index ?? row.slotIndex);
       return Number.isInteger(index) && index >= 0 ? Math.max(max, index) : max;
     }, -1);
-    const plotArrayLength = Math.max(3, state.slotCount, maxSavedIndex + 1);
-    state.plots = Array.from({ length: plotArrayLength }, () => null);
+    state.plots = Array.from({ length: Math.max(3, state.slotCount, maxSavedIndex + 1) }, () => null);
     plotRows.forEach(row => {
       const index = Number(row.slot_index ?? row.slotIndex);
       if (!Number.isInteger(index) || index < 0 || index >= state.plots.length) return;
@@ -496,9 +402,7 @@
     state.inventory = CATALOG.mergeInventoryStacks(Array.isArray(data.inventory) ? data.inventory : []);
     const discoveryById = new Map(CATALOG.discoveries.map(discovery => [discovery.id, discovery.key]));
     state.discoveries = (Array.isArray(data.discoveries) ? data.discoveries : []).map(entry => {
-      const value = typeof entry === "object" && entry !== null
-        ? (entry.discovery_id ?? entry.id ?? entry.key)
-        : entry;
+      const value = typeof entry === "object" && entry !== null ? (entry.discovery_id ?? entry.id ?? entry.key) : entry;
       return typeof value === "number" ? discoveryById.get(value) : String(value);
     }).filter(Boolean);
     state.unlockedFishingAreaIds = getUnlockedFishingAreaIds();
@@ -509,14 +413,148 @@
     renderAll();
   }
 
-  function getInventoryRowsForDatabase(playerId = window.SACRIFICIO_AUTH_USER_ID) {
-    return state.inventory.map(stack => CATALOG.toDatabaseInventoryRow(playerId, stack));
+  async function loadGameState() {
+    const version = ++loadVersion;
+    const playerId = window.SACRIFICIO_AUTH_USER_ID;
+    const client = window.SACRIFICIO_SUPABASE;
+    if (!playerId || !client) {
+      state.gold = 0;
+      state.plots = [null, null, null];
+      state.inventory = [];
+      state.discoveries = [];
+      state.slotCount = 3;
+      state.slotCapacityReady = false;
+      renderAll();
+      setStatus(playerId ? "Conexão com Supabase indisponível." : "Entre na conta do clã para carregar o jogo.", !playerId);
+      return;
+    }
+
+    setStatus("Carregando seus dados do Supabase...");
+    try {
+      const { data, error } = await client.rpc("game_get_state");
+      if (error) throw error;
+      if (version !== loadVersion || playerId !== window.SACRIFICIO_AUTH_USER_ID) return;
+      hydrateFromDatabase(data || {});
+      setStatus("Progresso carregado do Supabase.", false);
+    } catch (error) {
+      if (version !== loadVersion) return;
+      console.error("Erro ao carregar o RPG:", error);
+      setStatus("Não foi possível carregar: " + (error.message || "erro desconhecido"), true);
+    }
+  }
+
+  async function runServerAction(action, parameters) {
+    const client = window.SACRIFICIO_SUPABASE;
+    if (!client || !window.SACRIFICIO_AUTH_USER_ID) {
+      setStatus("Entre na sua conta antes de jogar.", true);
+      return null;
+    }
+    if (state.busy) return null;
+
+    state.busy = true;
+    renderFarm();
+    setStatus("Salvando no Supabase...");
+    try {
+      const { data, error } = await client.rpc(action, parameters);
+      if (error) throw error;
+      await loadGameState();
+      if (action === "game_harvest_plot" && data && data.worm_found) {
+        setStatus("Colheita salva! Você encontrou uma minhoca. A pesca foi desbloqueada permanentemente.");
+      } else {
+        setStatus(action === "game_harvest_plot" ? "Colheita salva no Supabase." : "Plantio salvo no Supabase.");
+      }
+      return data;
+    } catch (error) {
+      console.error("Erro na ação do RPG:", error);
+      const known = {
+        NOT_ENOUGH_GOLD: "Você não tem Gold suficiente.",
+        PLOT_ALREADY_OCCUPIED: "Este terreno já está ocupado.",
+        PLANT_NOT_READY: "Esta planta ainda está crescendo.",
+        PLOT_EMPTY: "Não existe planta neste terreno.",
+        PROFILE_NOT_ACTIVE: "Sua conta do clã não está ativa.",
+        PLOT_SLOT_NOT_UNLOCKED: "Este slot ainda não foi desbloqueado."
+      };
+      const message = String(error.message || "");
+      const knownKey = Object.keys(known).find(key => message.includes(key));
+      setStatus(knownKey ? known[knownKey] : "Falha ao salvar: " + message, true);
+      return null;
+    } finally {
+      state.busy = false;
+      renderFarm();
+    }
+  }
+
+  elements.plots.addEventListener("click", async event => {
+    const button = event.target.closest("button[data-action]");
+    if (!button || button.disabled) return;
+    const plotIndex = Number(button.dataset.plot);
+    if (!Number.isInteger(plotIndex) || plotIndex < 0 || plotIndex >= state.plots.length) return;
+
+    if (button.dataset.action === "plant" && !state.plots[plotIndex]) {
+      const plant = CATALOG.getItem(Number(button.dataset.itemId));
+      if (!plant || !plant.starter || plotIndex >= state.slotCount) return;
+      await runServerAction("game_start_planting", {
+        p_slot_index: plotIndex,
+        p_plant_item_id: plant.id
+      });
+    }
+
+    if (button.dataset.action === "harvest") {
+      const plot = state.plots[plotIndex];
+      if (!plot || Date.now() < plot.finishesAt) return;
+      await runServerAction("game_harvest_plot", { p_slot_index: plotIndex });
+    }
+  });
+
+  elements.fishing.addEventListener("click", event => {
+    const areaButton = event.target.closest("button[data-area-id]");
+    if (areaButton && !areaButton.disabled) {
+      const areaId = Number(areaButton.dataset.areaId);
+      if (getUnlockedFishingAreaIds().includes(areaId)) {
+        state.selectedFishingAreaId = areaId;
+        state.selectedFishId = null;
+        renderFishing();
+      }
+      return;
+    }
+    const fishButton = event.target.closest("button[data-action='select-fish']");
+    if (fishButton) {
+      const fishId = Number(fishButton.dataset.fishId);
+      const fish = CATALOG.getItem(fishId);
+      if (fish && getUnlockedFishingAreaIds().includes(fish.areaId)) {
+        state.selectedFishId = fishId;
+        renderFishing();
+      }
+    }
+  });
+
+  document.getElementById("game-tabs").addEventListener("click", event => {
+    const button = event.target.closest("[data-game-tab]");
+    if (button) showGamePanel(button.dataset.gameTab);
+  });
+  elements.catalogSearch.addEventListener("input", renderCatalog);
+  elements.catalogCategory.addEventListener("change", renderCatalog);
+
+  window.addEventListener("sacrificio:auth-updated", loadGameState);
+
+  function renderAll() {
+    elements.playerId.textContent = window.SACRIFICIO_AUTH_USER_ID || "Aguardando autenticação";
+    elements.gold.textContent = String(state.gold);
+    renderFarm();
+    renderFishing();
+    renderMining();
+    renderAlchemy();
+    renderInventory();
+    renderCatalog();
+    renderProgression();
   }
 
   window.SACRIFICIO_GAME = Object.freeze({
     catalog: CATALOG,
     hydrateFromDatabase,
-    getInventoryRowsForDatabase,
+    loadGameState,
+    getInventoryRowsForDatabase: (playerId = window.SACRIFICIO_AUTH_USER_ID) =>
+      state.inventory.map(stack => CATALOG.toDatabaseInventoryRow(playerId, stack)),
     getTemporaryState: () => ({
       gold: state.gold,
       slotCount: state.slotCount,
@@ -533,4 +571,5 @@
   }, 1000);
 
   renderAll();
+  if (window.SACRIFICIO_AUTH_USER_ID) loadGameState();
 })();

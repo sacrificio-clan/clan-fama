@@ -123,4 +123,4 @@ Ela cria:
 - `game_start_planting(slot, plant_id)`: valida custo, slot, cultura e tempo no servidor.
 - `game_harvest_plot(slot)`: valida o término, credita Gold, registra o item com tags, grava histórico e faz a rolagem da minhoca com pity persistente.
 
-A interface chama essas funções por RPC. Não são criadas permissões de escrita direta nas tabelas para o navegador. O salvamento de pesca, mineração, alquimia e crafting será incluído quando cada mecânica for implementada.
+A interface chama essas funções por RPC. Não são criadas permissões de escrita direta nas tabelas para o navegador. O salvamento de pesca, mineração, alquimia e crafting será incluído quando cada mecânica for implementada. A primeira versão do cliente já chama essas três RPCs para carregar estado, iniciar plantio e colher; o salvamento só funciona depois de executar a segunda migration.

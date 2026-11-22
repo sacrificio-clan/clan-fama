@@ -273,6 +273,19 @@
       makeElement("p", "", "Pesca sem isca permanece possível. Isca Simples, Isca Reforçada e Isca Mística terão bônus de Luck e redução de tempo; os valores serão balanceados antes de ativar a mecânica.")
     );
     elements.fishing.appendChild(baitCard);
+    if (hasDiscovery("WORM_FOUND")) {
+      const baitList = makeElement("div", "game-future-grid");
+      CATALOG.baits.forEach(bait => {
+        const baitRow = makeElement("div", "game-future-card");
+        baitRow.append(
+          makeElement("strong", "", bait.name),
+          makeElement("small", "", "ID " + bait.id),
+          makeElement("p", "", "Luck: a definir · Redução de tempo: a definir")
+        );
+        baitList.appendChild(baitRow);
+      });
+      elements.fishing.appendChild(baitList);
+    }
   }
 
   function renderMining() {
@@ -285,6 +298,19 @@
       makeElement("p", "", "O catálogo inclui pedra, carvão, cobre, ferro, prata, ouro, cristais, gemas, Orichalco, Adamantio, Mytril, Titânio, Cobalto e Paládio. Pavranium não pode ser minerado.")
     );
     elements.mining.appendChild(card);
+
+    if (unlocked) {
+      const mineralList = makeElement("div", "game-future-grid");
+      CATALOG.minerals.filter(mineral => mineral.id !== 300019).forEach(mineral => {
+        const mineralCard = makeElement("div", "game-future-card");
+        mineralCard.append(
+          makeElement("strong", "", mineral.name),
+          makeElement("small", "", "ID " + mineral.id + " · TAGS VARIÁVEIS")
+        );
+        mineralList.appendChild(mineralCard);
+      });
+      elements.mining.appendChild(mineralList);
+    }
 
     const seedCard = makeElement("div", "game-future-card");
     seedCard.append(

@@ -70,7 +70,7 @@
   }
 
   function setDevMode(enabled) {
-    if (!window.SACRIFICIO_IS_OWNER) return;
+    if (enabled && !window.SACRIFICIO_IS_OWNER) return;
     if (Boolean(enabled) === state.devMode) return;
     if (enabled) {
       state.devOriginalState = {

@@ -648,7 +648,9 @@
       const area = CATALOG.fishingAreas.find(item => item.id === state.devRaid.areaId);
       const amount = getFishingBadgeCount() * 8;
       const now = new Date();
-      const hour = now.getHours();
+      const hour = Number(new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Sao_Paulo", hour: "2-digit", hourCycle: "h23"
+      }).format(now));
       const tagId = hour === 12 ? 6 : hour === 0 ? 7 : null;
       const counts = new Map();
       for (let i = 0; i < amount; i++) {

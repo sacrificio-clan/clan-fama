@@ -1235,6 +1235,8 @@
     }
 
     window.SACRIFICIO_AUTH_USER_ID = currentSession ? currentSession.user.id : null;
+    window.SACRIFICIO_IS_OWNER = Boolean(currentSession && currentProfile && currentProfile.is_active && currentProfile.role === "owner");
+    window.SACRIFICIO_FISHING_BADGE_COUNT = window.SACRIFICIO_IS_OWNER ? 6 : 0;
     const gameNav = document.querySelector('[data-view="game"]');
     if (gameNav) gameNav.hidden = !currentSession;
     window.dispatchEvent(new Event("sacrificio:auth-updated"));

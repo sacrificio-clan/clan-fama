@@ -3,7 +3,7 @@
 -- Run after 20261122160000_game_rpg_v1.sql and 20261122170000_game_save_v1.sql.
 begin;
 
--- Each lake has exactly five species; each position represents one rarity tier.
+-- Each lake has five fish entries; every entry receives an explicit rarity assignment.
 alter table public.game_fishing_area_items
   add column if not exists rarity text not null default 'pending';
 

@@ -5,32 +5,16 @@ begin;
 
 -- Each lake has exactly five species; each position represents one rarity tier.
 alter table public.game_fishing_area_items
-  add column if not exists rarity text not null default 'common';
+  add column if not exists rarity text not null default 'pending';
 
 alter table public.game_fishing_area_items
   drop constraint if exists game_fishing_area_items_rarity_check;
 alter table public.game_fishing_area_items
   add constraint game_fishing_area_items_rarity_check
-  check (rarity in ('common','uncommon','rare','epic','legendary'));
+  check (rarity in ('pending','common','uncommon','rare','epic','legendary'));
 
--- Existing catalog order maps the five species in each lake to five rarity tiers.
-with ranked as (
-  select area_id, fish_item_id,
-         row_number() over (partition by area_id order by sort_order) as rarity_order
-    from public.game_fishing_area_items
-)
-update public.game_fishing_area_items a
-   set rarity = case ranked.rarity_order
-     when 1 then 'common'
-     when 2 then 'uncommon'
-     when 3 then 'rare'
-     when 4 then 'epic'
-     when 5 then 'legendary'
-     else 'common'
-   end
-  from ranked
- where ranked.area_id = a.area_id
-   and ranked.fish_item_id = a.fish_item_id;
+-- Rarity is deliberately left as 'pending' until the owner assigns the
+-- exact tier to each of the five species in every lake. No arbitrary odds are assumed.
 
 -- Config is data-driven. Odds and bait multipliers remain unset until game balance is approved.
 create table if not exists public.game_fishing_rules (

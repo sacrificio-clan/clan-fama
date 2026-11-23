@@ -29,6 +29,21 @@ create table if not exists public.game_fishing_rules (
 );
 insert into public.game_fishing_rules (id) values (1) on conflict (id) do nothing;
 
+-- One rarity chance per lake and rarity. NULL means the owner has not balanced it yet.
+create table if not exists public.game_fishing_rarity_odds (
+  area_id integer not null references public.game_fishing_areas(id) on delete cascade,
+  rarity text not null check (rarity in ('common','uncommon','rare','epic','legendary')),
+  base_chance numeric(9,6) check (base_chance is null or base_chance between 0 and 1),
+  primary key (area_id, rarity)
+);
+insert into public.game_fishing_rarity_odds (area_id, rarity)
+select area.id, rarity.name
+  from public.game_fishing_areas area
+ cross join (values
+   ('common'),('uncommon'),('rare'),('epic'),('legendary')
+ ) as rarity(name)
+on conflict (area_id, rarity) do nothing;
+
 -- Bait changes only Luck; it never changes the number of fish.
 alter table public.game_baits
   add column if not exists luck_multiplier numeric(8,3);
@@ -62,6 +77,13 @@ create index if not exists game_fishing_job_results_player_idx
   on public.game_fishing_job_results (player_id, created_at desc);
 create index if not exists game_fishing_job_results_job_idx
   on public.game_fishing_job_results (job_id);
+
+alter table public.game_fishing_rarity_odds enable row level security;
+revoke all on table public.game_fishing_rarity_odds from anon, authenticated;
+grant select on table public.game_fishing_rarity_odds to authenticated;
+drop policy if exists game_fishing_rarity_odds_read on public.game_fishing_rarity_odds;
+create policy game_fishing_rarity_odds_read on public.game_fishing_rarity_odds
+  for select to authenticated using (true);
 
 alter table public.game_fishing_rules enable row level security;
 revoke all on table public.game_fishing_rules from anon, authenticated;

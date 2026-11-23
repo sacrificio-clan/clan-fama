@@ -303,7 +303,7 @@
       );
       elements.fishing.appendChild(lock);
     } else {
-      elements.fishing.appendChild(makeElement("p", "game-panel-description", "Escolha uma espécie antes de pescar. É possível pescar sem isca; as iscas aumentam Luck e reduzem o tempo. A captura e as tags serão validadas pelo servidor."));
+      elements.fishing.appendChild(makeElement("p", "game-panel-description", "Cada raid sorteia entre as cinco espécies do lago. A quantidade vem das badges de categoria; iscas afetam somente Luck e a coleta em 00:00 ou 12:00 aplica Luck 2x."));
     }
 
     const areaList = makeElement("div", "game-fishing-area-list");
@@ -342,19 +342,11 @@
           makeElement("strong", "", fish.name),
           makeElement("small", "", "ID " + fish.id + " · TAGS VARIÁVEIS")
         );
-        const selectFish = makeElement("button", "game-action-button", state.selectedFishId === fish.id ? "PEIXE SELECIONADO" : "SELECIONAR PEIXE");
-        selectFish.type = "button";
-        selectFish.dataset.action = "select-fish";
-        selectFish.dataset.fishId = String(fish.id);
-        fishRow.appendChild(selectFish);
+        fishRow.appendChild(makeElement("small", "", "Raridade: aguardando definição"));
         fishList.appendChild(fishRow);
       });
       fishCard.appendChild(fishList);
       elements.fishing.appendChild(fishCard);
-      if (state.selectedFishId) {
-        const selectedFish = CATALOG.getItem(state.selectedFishId);
-        elements.fishing.appendChild(makeElement("p", "game-panel-description", "Alvo escolhido: " + (selectedFish ? selectedFish.name : "Peixe") + ". O início da pescaria será ativado após a próxima etapa."));
-      }
     }
 
     const badgeCount = getFishingBadgeCount();
@@ -683,15 +675,6 @@
         renderFishing();
       }
       return;
-    }
-    const fishButton = event.target.closest("button[data-action='select-fish']");
-    if (fishButton) {
-      const fishId = Number(fishButton.dataset.fishId);
-      const fish = CATALOG.getItem(fishId);
-      if (fish && getUnlockedFishingAreaIds().includes(fish.areaId)) {
-        state.selectedFishId = fishId;
-        renderFishing();
-      }
     }
   });
 

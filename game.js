@@ -87,6 +87,7 @@
       state.gold = 999999;
       state.slotCount = 40;
       state.slotCapacityReady = true;
+      state.plots = Array.from({ length: 40 }, (_, index) => state.plots[index] || null);
       state.discoveries = CATALOG.discoveries.map(item => item.key);
       state.unlockedFishingAreaIds = CATALOG.fishingAreas.map(area => area.id);
       document.body.classList.add("game-dev-mode");

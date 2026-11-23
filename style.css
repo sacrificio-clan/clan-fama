@@ -1302,3 +1302,16 @@ button { color: inherit; }
 .game-save-status { min-height: 16px; margin: -10px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
 .game-save-status.is-error { color: #fca5a5; }
 .game-save-status.is-success { color: #9bc6a7; }
+/* Owner-only RPG developer sandbox */
+.game-dev-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0;padding:14px 16px;border:1px solid rgba(218,170,74,.38);border-radius:12px;background:linear-gradient(110deg,rgba(218,170,74,.09),rgba(255,255,255,.025))}
+.game-dev-toolbar[hidden]{display:none}
+.game-dev-toolbar>div{display:grid;gap:4px}
+.game-dev-toolbar strong{font-size:.72rem;letter-spacing:.12em;color:#d9b66b}
+.game-dev-toolbar span{font-size:.82rem;color:var(--muted,#a1a1aa)}
+.game-dev-toggle{border:1px solid #b88b3b;border-radius:8px;padding:9px 13px;background:transparent;color:inherit;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer}
+.game-dev-toggle[aria-pressed="true"]{background:#a36d1d;color:#fff;border-color:#d9b66b}
+.game-dev-mode .game-dev-toolbar{border-color:#d9b66b;background:rgba(163,109,29,.16)}
+.game-dev-warning{padding:10px 12px;border:1px dashed #d9b66b;border-radius:9px;color:#e8c77f;font-size:.82rem;margin:10px 0}
+.game-fishing-raid{display:grid;gap:10px;padding:14px;border:1px solid var(--border,#333);border-radius:12px;margin:12px 0}
+.game-fishing-raid button{width:max-content;max-width:100%}
+.game-fishing-raid-timer{font-size:1.4rem;font-weight:800;font-variant-numeric:tabular-nums}

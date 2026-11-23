@@ -17,7 +17,10 @@
     unlockedFishingAreaIds: [],
     selectedFishingAreaId: 210001,
     selectedFishId: null,
-    busy: false
+    busy: false,
+    devMode: false,
+    devRaid: null,
+    devOriginalState: null
   };
 
   let loadVersion = 0;
@@ -55,10 +58,76 @@
   }
 
   function hasDiscovery(key) {
-    return state.discoveries.includes(key);
+    return state.devMode || state.discoveries.includes(key);
+  }
+
+  function getFishingBadgeCount() {
+    return state.devMode ? 6 : Math.max(0, Number(window.SACRIFICIO_FISHING_BADGE_COUNT || 0));
+  }
+
+  function effectiveDurationMs(hours) {
+    return state.devMode ? 60 * 1000 : hours * 60 * 60 * 1000;
+  }
+
+  function setDevMode(enabled) {
+    if (!window.SACRIFICIO_IS_OWNER) return;
+    if (Boolean(enabled) === state.devMode) return;
+    if (enabled) {
+      state.devOriginalState = {
+        gold: state.gold,
+        slotCount: state.slotCount,
+        slotCapacityReady: state.slotCapacityReady,
+        plots: state.plots.map(plot => plot ? { ...plot } : null),
+        inventory: state.inventory.map(stack => ({ ...stack, tag_ids: [...(stack.tag_ids || [])] })),
+        discoveries: [...state.discoveries],
+        unlockedFishingAreaIds: [...state.unlockedFishingAreaIds]
+      };
+      state.devMode = true;
+      state.devRaid = null;
+      state.gold = 999999;
+      state.slotCount = 40;
+      state.slotCapacityReady = true;
+      state.discoveries = CATALOG.discoveries.map(item => item.key);
+      state.unlockedFishingAreaIds = CATALOG.fishingAreas.map(area => area.id);
+      document.body.classList.add("game-dev-mode");
+      setStatus("MODO DEV ATIVO · alterações apenas nesta sessão; nada será enviado ao Supabase.");
+    } else {
+      state.devMode = false;
+      state.devRaid = null;
+      document.body.classList.remove("game-dev-mode");
+      const original = state.devOriginalState;
+      state.devOriginalState = null;
+      if (original) {
+        state.gold = original.gold;
+        state.slotCount = original.slotCount;
+        state.slotCapacityReady = original.slotCapacityReady;
+        state.plots = original.plots;
+        state.inventory = original.inventory;
+        state.discoveries = original.discoveries;
+        state.unlockedFishingAreaIds = original.unlockedFishingAreaIds;
+      }
+      setStatus("Modo Dev encerrado. Estado original restaurado.");
+      loadGameState();
+    }
+    updateDevControls();
+    renderAll();
+  }
+
+  function updateDevControls() {
+    const toolbar = document.getElementById("game-dev-toolbar");
+    const toggle = document.getElementById("game-dev-toggle");
+    const status = document.getElementById("game-dev-status");
+    if (!toolbar || !toggle || !status) return;
+    toolbar.hidden = !window.SACRIFICIO_IS_OWNER;
+    toggle.setAttribute("aria-pressed", state.devMode ? "true" : "false");
+    toggle.textContent = state.devMode ? "Desativar modo Dev" : "Ativar modo Dev";
+    status.textContent = state.devMode
+      ? "Modo Dev ativo · progresso temporário · timers de 1 minuto"
+      : "Modo normal · dados reais · 6 badges de categoria";
   }
 
   function getUnlockedFishingAreaIds() {
+    if (state.devMode) return CATALOG.fishingAreas.map(area => area.id);
     const unlocked = [];
     if (hasDiscovery("WORM_FOUND")) unlocked.push(210001);
     if (hasDiscovery("FISHING_AREA_2")) unlocked.push(210002);
@@ -133,7 +202,7 @@
             button.disabled = state.busy || state.gold < plant.seedCost;
             button.append(
               makeElement("strong", "", plant.name),
-              makeElement("span", "", plant.growthHours + "h · " + plant.seedCost + " G · +" + plant.goldReward + " G")
+              makeElement("span", "", (state.devMode ? "1 min" : plant.growthHours + "h") + " · " + plant.seedCost + " G · +" + plant.goldReward + " G")
             );
             actions.appendChild(button);
           });
@@ -187,7 +256,7 @@
     const query = (elements.catalogSearch.value || "").trim().toLocaleLowerCase("pt-BR");
     const category = elements.catalogCategory.value || "all";
     const context = {
-      discoveryKeys: state.discoveries,
+      discoveryKeys: state.devMode ? CATALOG.discoveries.map(item => item.key) : state.discoveries,
       unlockedFishingAreaIds: getUnlockedFishingAreaIds(),
       ownedItemIds: state.inventory.map(stack => stack.item_id)
     };
@@ -221,6 +290,10 @@
 
   function renderFishing() {
     elements.fishing.replaceChildren();
+    if (state.devMode) {
+      const warning = makeElement("div", "game-dev-warning", "MODO DEV: raid de pesca simulada em 1 minuto. A simulação é local e não grava no banco.");
+      elements.fishing.appendChild(warning);
+    }
     if (!hasDiscovery("WORM_FOUND")) {
       const lock = makeElement("div", "game-future-card");
       lock.append(
@@ -284,10 +357,38 @@
       }
     }
 
+    const badgeCount = getFishingBadgeCount();
+    const raidCard = makeElement("div", "game-fishing-raid");
+    raidCard.append(
+      makeElement("strong", "", "Expedição de pesca · " + (state.devMode ? "1 minuto (Dev)" : "8 horas")),
+      makeElement("p", "", badgeCount + " badges de categoria × 8 horas = " + (badgeCount * 8) + " peixes por raid.")
+    );
+    if (state.devRaid) {
+      const remaining = Math.max(0, state.devRaid.finishesAt - Date.now());
+      raidCard.append(
+        makeElement("span", "", "Local: " + state.devRaid.areaName),
+        makeElement("strong", "game-fishing-raid-timer", remaining > 0 ? formatRemaining(remaining) : "RAID PRONTA PARA COLETAR")
+      );
+      if (remaining <= 0) {
+        const collect = makeElement("button", "game-action-button", "Coletar recompensa de teste");
+        collect.type = "button";
+        collect.dataset.action = "dev-fishing-collect";
+        raidCard.appendChild(collect);
+      }
+    } else if (state.devMode) {
+      const start = makeElement("button", "game-action-button", "Iniciar raid de teste");
+      start.type = "button";
+      start.dataset.action = "dev-fishing-start";
+      raidCard.appendChild(start);
+    } else {
+      raidCard.appendChild(makeElement("small", "", "A estrutura de pesca está sendo preparada. A coleta oficial será ativada após definir as probabilidades de raridade e concluir as funções seguras do banco."));
+    }
+    elements.fishing.appendChild(raidCard);
+
     const baitCard = makeElement("div", "game-future-card");
     baitCard.append(
-      makeElement("strong", "", "Sistema de iscas preparado"),
-      makeElement("p", "", "Pesca sem isca permanece possível. Isca Simples, Isca Reforçada e Isca Mística terão bônus de Luck e redução de tempo; valores ainda serão balanceados.")
+      makeElement("strong", "", "Iscas · Luck"),
+      makeElement("p", "", "A isca altera somente a Luck. Ela não aumenta a quantidade de peixes. Os multiplicadores individuais serão configurados no catálogo.")
     );
     elements.fishing.appendChild(baitCard);
   }
@@ -445,6 +546,10 @@
 
   async function runServerAction(action, parameters) {
     const client = window.SACRIFICIO_SUPABASE;
+    if (state.devMode) {
+      setStatus("Bloqueado: o Modo Dev não pode enviar alterações ao Supabase.", true);
+      return null;
+    }
     if (!client || !window.SACRIFICIO_AUTH_USER_ID) {
       setStatus("Entre na sua conta antes de jogar.", true);
       return null;
@@ -493,6 +598,20 @@
     if (button.dataset.action === "plant" && !state.plots[plotIndex]) {
       const plant = CATALOG.getItem(Number(button.dataset.itemId));
       if (!plant || !plant.starter || plotIndex >= state.slotCount) return;
+      if (state.devMode) {
+        if (state.gold < plant.seedCost) return;
+        state.gold -= plant.seedCost;
+        const plantedAt = Date.now();
+        state.plots[plotIndex] = {
+          itemId: plant.id,
+          seedItemId: plant.seedItemId || 0,
+          finishesAt: plantedAt + effectiveDurationMs(plant.growthHours),
+          goldReward: plant.goldReward
+        };
+        renderAll();
+        setStatus("Plantio de teste iniciado. Timer de 1 minuto; nada foi salvo.");
+        return;
+      }
       await runServerAction("game_start_planting", {
         p_slot_index: plotIndex,
         p_plant_item_id: plant.id
@@ -502,11 +621,57 @@
     if (button.dataset.action === "harvest") {
       const plot = state.plots[plotIndex];
       if (!plot || Date.now() < plot.finishesAt) return;
+      if (state.devMode) {
+        state.gold += Number(plot.goldReward || 0);
+        state.plots[plotIndex] = null;
+        renderAll();
+        setStatus("Colheita simulada no Modo Dev. Nada foi salvo.");
+        return;
+      }
       await runServerAction("game_harvest_plot", { p_slot_index: plotIndex });
     }
   });
 
   elements.fishing.addEventListener("click", event => {
+    const devStart = event.target.closest("button[data-action='dev-fishing-start']");
+    if (devStart && state.devMode) {
+      const area = CATALOG.fishingAreas.find(item => item.id === state.selectedFishingAreaId);
+      if (area) {
+        state.devRaid = { areaId: area.id, areaName: area.name, startedAt: Date.now(), finishesAt: Date.now() + 60000 };
+        renderFishing();
+        setStatus("Raid de teste iniciada por 1 minuto. Nada foi salvo.");
+      }
+      return;
+    }
+    const devCollect = event.target.closest("button[data-action='dev-fishing-collect']");
+    if (devCollect && state.devMode && state.devRaid && Date.now() >= state.devRaid.finishesAt) {
+      const area = CATALOG.fishingAreas.find(item => item.id === state.devRaid.areaId);
+      const amount = getFishingBadgeCount() * 8;
+      const now = new Date();
+      const hour = now.getHours();
+      const tagId = hour === 12 ? 6 : hour === 0 ? 7 : null;
+      const counts = new Map();
+      for (let i = 0; i < amount; i++) {
+        const fishId = area.fishIds[Math.floor(Math.random() * area.fishIds.length)];
+        const tags = tagId && Math.random() < 0.25 ? [tagId] : [];
+        const key = fishId + ":" + tags.join(",");
+        const previous = counts.get(key) || 0;
+        counts.set(key, previous + 1);
+      }
+      counts.forEach((quantity, key) => {
+        const [itemIdText, tagsText] = key.split(":");
+        const itemId = Number(itemIdText);
+        const tags = tagsText ? tagsText.split(",").map(Number) : [];
+        const existing = state.inventory.find(stack => stack.item_id === itemId &&
+          JSON.stringify([...(stack.tag_ids || [])].sort()) === JSON.stringify([...tags].sort()));
+        if (existing) existing.quantity += quantity;
+        else state.inventory.push({ item_id: itemId, quantity, tag_ids: tags });
+      });
+      state.devRaid = null;
+      renderAll();
+      setStatus(amount + " peixes simulados adicionados ao inventário temporário. Nada foi salvo.");
+      return;
+    }
     const areaButton = event.target.closest("button[data-area-id]");
     if (areaButton && !areaButton.disabled) {
       const areaId = Number(areaButton.dataset.areaId);
@@ -528,6 +693,9 @@
     }
   });
 
+  const devToggle = document.getElementById("game-dev-toggle");
+  if (devToggle) devToggle.addEventListener("click", () => setDevMode(!state.devMode));
+
   document.getElementById("game-tabs").addEventListener("click", event => {
     const button = event.target.closest("[data-game-tab]");
     if (button) showGamePanel(button.dataset.gameTab);
@@ -535,7 +703,11 @@
   elements.catalogSearch.addEventListener("input", renderCatalog);
   elements.catalogCategory.addEventListener("change", renderCatalog);
 
-  window.addEventListener("sacrificio:auth-updated", loadGameState);
+  window.addEventListener("sacrificio:auth-updated", () => {
+    if (!window.SACRIFICIO_IS_OWNER && state.devMode) setDevMode(false);
+    updateDevControls();
+    loadGameState();
+  });
 
   function renderAll() {
     elements.playerId.textContent = window.SACRIFICIO_AUTH_USER_ID || "Aguardando autenticação";
@@ -547,6 +719,7 @@
     renderInventory();
     renderCatalog();
     renderProgression();
+    updateDevControls();
   }
 
   window.SACRIFICIO_GAME = Object.freeze({
@@ -568,6 +741,7 @@
 
   window.setInterval(() => {
     if (document.getElementById("game-panel-farm")?.classList.contains("is-active")) renderFarm();
+    if (document.getElementById("game-panel-fishing")?.classList.contains("is-active")) renderFishing();
   }, 1000);
 
   renderAll();
